@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1329" />
+      <stop offset="100%" stop-color="#050914" />
+    </linearGradient>
+    <linearGradient id="pinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="crossGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#00f0ff" />
+    </linearGradient>
+  </defs>
+
+  <!-- Base App Icon Container -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  <rect x="8" y="8" width="496" height="496" rx="104" fill="none" stroke="#00f0ff" stroke-opacity="0.25" stroke-width="6" />
+
+  <!-- GPS Location Pin Frame -->
+  <path
+    d="M 256,464 C 205,385 112,285 112,192 A 144,144 0 1,1 400,192 C 400,285 307,385 256,464 Z"
+    fill="#0c1836"
+    stroke="url(#pinGrad)"
+    stroke-width="26"
+    stroke-linejoin="round"
+  />
+
+  <!-- Inner Medical Cross -->
+  <g fill="url(#crossGrad)">
+    <!-- Vertical cross bar -->
+    <rect x="230" y="100" width="52" height="184" rx="14" />
+    <!-- Horizontal cross bar -->
+    <rect x="164" y="166" width="184" height="52" rx="14" />
+  </g>
+
+  <!-- ECG Heartbeat / Emergency Response Pulse Line -->
+  <path
+    d="M 136,192 L 204,192 L 226,228 L 256,112 L 286,268 L 308,192 L 376,192"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="22"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Center Pulse Beacon Dot -->
+  <circle cx="256" cy="112" r="7" fill="#00f0ff" />
+</svg>
