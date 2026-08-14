@@ -1,11 +1,9 @@
 import bcrypt from "bcryptjs";
 
-
-const OPS = { lat: 12.9692, lng: 79.1559 };
 const hash = (pw) => bcrypt.hashSync(pw, 10);
 
 export async function seed(knex) {
-  // Only seed hospitals if table is empty
+  // 1. Reference Hospitals (Vellore Infrastructure)
   const hospitalCount = await knex("hospitals").count("id as c").first();
   if (Number(hospitalCount?.c || 0) === 0) {
     await knex("hospitals").insert([
@@ -40,7 +38,20 @@ export async function seed(knex) {
     ]);
   }
 
-  // Seed default admin and dispatcher if missing
+  // 2. Initial Ambulance Fleet (Independent fleet resources available for driver registration)
+  const vehicleCount = await knex("vehicles").count("id as c").first();
+  if (Number(vehicleCount?.c || 0) === 0) {
+    await knex("vehicles").insert([
+      { plate: "EMS-4471", model: "Mercedes Sprinter", type: "ALS", status: "available" },
+      { plate: "EMS-4472", model: "Ford E-450", type: "BLS", status: "available" },
+      { plate: "EMS-4473", model: "Mercedes Sprinter", type: "ICU", status: "available" },
+      { plate: "EMS-4474", model: "Ford E-450", type: "ALS", status: "available" },
+      { plate: "EMS-4475", model: "Ram ProMaster", type: "BLS", status: "available" },
+      { plate: "EMS-4476", model: "Mercedes Sprinter", type: "MICU", status: "available" },
+    ]);
+  }
+
+  // 3. Core System Accounts (Admin & Dispatcher)
   const adminExists = await knex("users").where({ email: "admin@ems.local" }).first();
   if (!adminExists) {
     await knex("users").insert({
@@ -60,4 +71,20 @@ export async function seed(knex) {
       role: "dispatcher",
     });
   }
+
+  // 4. Purge synthetic demo driver/citizen accounts if present
+  await knex("users")
+    .whereIn("email", [
+      "citizen@ems.local",
+      "driver1@ems.local",
+      "driver2@ems.local",
+      "driver3@ems.local",
+      "driver4@ems.local",
+      "driver5@ems.local",
+      "driver6@ems.local",
+      "driver7@ems.local",
+      "driver8@ems.local",
+    ])
+    .delete();
 }
+

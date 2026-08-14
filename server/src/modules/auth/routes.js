@@ -53,16 +53,20 @@ router.post(
 
       // Create driver profile if registering as a driver
       if (role === "driver") {
-        // Pick the first vehicle not already assigned to an existing driver
+        // Pick the first vehicle with status 'available' not already assigned to an existing driver
         const assignedVehicleIds = trx("drivers")
           .whereNotNull("vehicle_id")
           .select("vehicle_id");
         const vehicle = await trx("vehicles")
+          .where("status", "available")
           .whereNotIn("id", assignedVehicleIds)
           .first("id");
 
         if (!vehicle) {
-          throw new HttpError(400, "No available ambulance vehicle for registration.");
+          throw new HttpError(
+            400,
+            "No available ambulance vehicle for registration. Please contact the dispatcher to add another ambulance."
+          );
         }
 
         // Generate unique call sign to prevent constraint collisions

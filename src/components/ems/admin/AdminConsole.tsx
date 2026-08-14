@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { STATUS_META, type UserRole } from "@/lib/ems/types";
 import { useIncidents } from "@/hooks/dispatch/use-incidents";
 import { useDrivers } from "@/hooks/fleet/use-drivers";
-import { useVehicles } from "@/hooks/fleet/use-vehicles";
+import { useVehicles, useCreateVehicle } from "@/hooks/fleet/use-vehicles";
 import { useHospitals } from "@/hooks/fleet/use-hospitals";
 import { useUsers, type UserInfo } from "@/hooks/fleet/use-users";
 import { useNotifications } from "@/hooks/notifications/use-notifications";
@@ -551,6 +551,8 @@ function FleetTab({
   vehicles: { id: string; plate: string; model: string; type: string; status: string }[];
   drivers: { id: string; name: string; callSign: string; vehicleId?: string }[];
 }) {
+  const [showAddModal, setShowAddModal] = useState(false);
+
   return (
     <div className="flex h-full flex-col rounded-lg border border-border bg-surface panel">
       <div className="flex items-center gap-2 border-b border-border px-3 py-2">
@@ -558,10 +560,15 @@ function FleetTab({
         <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Vehicles ({vehicles.length})
         </span>
-        <button className="ml-auto rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-glow hover:opacity-90">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="ml-auto rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-glow hover:opacity-90"
+        >
           + Add vehicle
         </button>
       </div>
+
+      {showAddModal && <AddVehicleModal onClose={() => setShowAddModal(false)} />}
       <div className="min-h-0 flex-1 overflow-y-auto">
         <table className="w-full text-left text-xs">
           <thead className="sticky top-0 bg-surface text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -749,6 +756,113 @@ function AuditTab({ activity }: { activity: ActivityEntry[] }) {
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+function AddVehicleModal({ onClose }: { onClose: () => void }) {
+  const createVehicle = useCreateVehicle();
+  const [plate, setPlate] = useState("EMS-4480");
+  const [model, setModel] = useState("Mercedes Sprinter");
+  const [type, setType] = useState<"ALS" | "BLS" | "ICU" | "MICU">("ALS");
+  const [status, setStatus] = useState<"available" | "maintenance" | "offline">("available");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await createVehicle.mutateAsync({ plate, model, type, status });
+      onClose();
+    } catch {
+      // error toast shown by mutation
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-lg border border-border bg-surface panel p-5 shadow-2xl">
+        <h3 className="text-base font-semibold">Add Ambulance</h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Register a new vehicle into the EMS fleet resources.
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+          <div>
+            <label className="block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              Plate Number
+            </label>
+            <input
+              required
+              value={plate}
+              onChange={(e) => setPlate(e.target.value)}
+              placeholder="e.g. EMS-4480"
+              className="mt-1 w-full rounded-md border border-border bg-surface-2 px-3 py-1.5 text-xs font-mono focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              Model
+            </label>
+            <input
+              required
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              placeholder="e.g. Mercedes Sprinter"
+              className="mt-1 w-full rounded-md border border-border bg-surface-2 px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+                Type
+              </label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value as any)}
+                className="mt-1 w-full rounded-md border border-border bg-surface-2 px-2.5 py-1.5 text-xs focus:border-primary focus:outline-none"
+              >
+                <option value="ALS">ALS (Advanced Life Support)</option>
+                <option value="BLS">BLS (Basic Life Support)</option>
+                <option value="ICU">ICU (Mobile ICU)</option>
+                <option value="MICU">MICU (Medical Intensive Care)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+                Status
+              </label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as any)}
+                className="mt-1 w-full rounded-md border border-border bg-surface-2 px-2.5 py-1.5 text-xs focus:border-primary focus:outline-none"
+              >
+                <option value="available">Available</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="offline">Offline</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-5 flex justify-end gap-2 pt-2 border-t border-border">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={createVehicle.isPending}
+              className="rounded-md bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-50"
+            >
+              {createVehicle.isPending ? "Adding…" : "Add Vehicle"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

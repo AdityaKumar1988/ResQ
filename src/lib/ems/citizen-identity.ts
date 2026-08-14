@@ -9,10 +9,10 @@ function makeDefault(): Citizen {
     id: `cit-me-${Math.random().toString(36).slice(2, 8)}`,
     name: "",
     phone: "",
-    address: "",
+    address: "Vellore, Tamil Nadu",
     location: {
-      lat: 0,
-      lng: 0,
+      lat: 12.9692,
+      lng: 79.1559,
     },
   };
 }
@@ -36,7 +36,12 @@ export function useCitizenIdentity(): [Citizen, (patch: Partial<Citizen>) => voi
 
     if (user && user.role === "citizen") {
       setCitizen((old) => {
-        const next = { ...old, name: old.name || user.name, phone: old.phone || (user.phone ?? "") };
+        const next = {
+          ...old,
+          id: user.id,
+          name: user.name, // Authenticated user's real name always overrides localStorage
+          phone: user.phone ?? old.phone ?? "",
+        };
         localStorage.setItem(KEY, JSON.stringify(next));
         return next;
       });
