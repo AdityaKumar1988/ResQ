@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: smart-ems-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ems
+      POSTGRES_PASSWORD: ems
+      POSTGRES_DB: smart_ems
+    ports:
+      - "5432:5432"
+    volumes:
+      - ems_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ems -d smart_ems"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: smart-ems-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      CORS_ORIGIN: http://localhost:8080
+      DATABASE_URL: postgres://ems:ems@postgres:5432/smart_ems
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-access-secret}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-refresh-secret}
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL: 30d
+      LOG_LEVEL: info
+    ports:
+      - "4000:4000"
+    command: sh -c "npx knex migrate:latest && node src/index.js"
+
+volumes:
+  ems_pg_data:
