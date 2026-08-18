@@ -31,10 +31,14 @@ export function ActivityTimeline() {
   const activity: ActivityEvent[] = [
     ...(notifData?.all ?? []).slice(0, 15).map((n) => ({
       id: n.id,
-      kind: n.kind === "incident_created" ? "critical"
-        : n.kind === "incident_assigned" ? "info"
-        : n.kind === "incident_completed" ? "success"
-        : "info" as ActivityEvent["kind"],
+      kind:
+        n.kind === "incident_created"
+          ? "critical"
+          : n.kind === "incident_assigned"
+            ? "info"
+            : n.kind === "incident_completed"
+              ? "success"
+              : ("info" as ActivityEvent["kind"]),
       message: n.title + (n.body ? ` — ${n.body}` : ""),
       timestamp: n.createdAt,
     })),

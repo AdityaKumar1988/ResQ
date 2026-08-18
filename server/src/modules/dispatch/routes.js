@@ -12,9 +12,7 @@ router.use(authenticate, requireRole("dispatcher", "admin"));
 router.get(
   "/recommend/:incidentId",
   asyncHandler(async (req, res) => {
-    const incident = await db("incidents")
-      .where({ id: req.params.incidentId })
-      .first();
+    const incident = await db("incidents").where({ id: req.params.incidentId }).first();
     if (!incident) throw new HttpError(404, "Incident not found");
 
     const drivers = await db("drivers")
@@ -34,12 +32,7 @@ router.get(
         // Composite score: closer + higher rating + lower workload = better.
         const workload = Number(d.missions_active || 0);
         const rating = Number(d.rating || 4.5);
-        const score =
-          100 -
-          distanceKm * 8 -
-          workload * 5 +
-          (rating - 4.5) * 20 -
-          eta * 1.5;
+        const score = 100 - distanceKm * 8 - workload * 5 + (rating - 4.5) * 20 - eta * 1.5;
         const reasons = [
           `${distanceKm.toFixed(1)} km away`,
           `ETA ~${eta} min`,

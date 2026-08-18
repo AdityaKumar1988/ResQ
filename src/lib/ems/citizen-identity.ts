@@ -69,10 +69,10 @@ export function useCitizenIdentity(): [Citizen, (patch: Partial<Citizen>) => voi
         },
         {
           enableHighAccuracy: true,
-        }
+        },
       );
     }
-  }, []);
+  }, [user]);
 
   function update(patch: Partial<Citizen>) {
     setCitizen((old) => {
@@ -80,7 +80,9 @@ export function useCitizenIdentity(): [Citizen, (patch: Partial<Citizen>) => voi
 
       try {
         localStorage.setItem(KEY, JSON.stringify(next));
-      } catch {}
+      } catch {
+        // ignore storage errors
+      }
 
       return next;
     });

@@ -7,15 +7,20 @@ import { HttpError } from "../../utils/httpError.js";
 import { hashPassword, verifyPassword } from "../../utils/password.js";
 import { signAccess, signRefresh, verifyRefresh } from "../../utils/jwt.js";
 import { authenticate } from "../../middleware/auth.js";
+import { isValidPhone } from "../../utils/phone.js";
+import { notifyRole } from "../notifications/service.js";
 
 const router = Router();
 
 const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  name: z.string().min(1),
+  email: z.string().email("Valid email is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  name: z.string().min(1, "Name is required"),
   role: z.enum(["citizen", "dispatcher", "driver", "admin"]).default("citizen"),
-  phone: z.string().optional(),
+  phone: z
+    .string({ required_error: "Phone number is required." })
+    .min(1, "Phone number is required.")
+    .refine(isValidPhone, "Please enter a valid phone number."),
 });
 
 const loginSchema = z.object({
@@ -37,6 +42,19 @@ router.post(
   asyncHandler(async (req, res) => {
     const { email, password, name, role, phone } = req.body;
 
+    if (role === "admin") {
+      throw new HttpError(403, "Admin accounts must be created by an existing administrator.");
+    }
+    if (role === "dispatcher") {
+      throw new HttpError(403, "Dispatcher accounts must be created by an administrator.");
+    }
+    if (role !== "citizen" && role !== "driver") {
+      throw new HttpError(
+        400,
+        "Invalid registration role. Public registration only allows citizen or driver.",
+      );
+    }
+
     const existing = await db("users").where({ email }).first();
     if (existing) throw new HttpError(409, "Email already registered");
 
@@ -54,9 +72,7 @@ router.post(
       // Create driver profile if registering as a driver
       if (role === "driver") {
         // Pick the first vehicle with status 'available' not already assigned to an existing driver
-        const assignedVehicleIds = trx("drivers")
-          .whereNotNull("vehicle_id")
-          .select("vehicle_id");
+        const assignedVehicleIds = trx("drivers").whereNotNull("vehicle_id").select("vehicle_id");
         const vehicle = await trx("vehicles")
           .where("status", "available")
           .whereNotIn("id", assignedVehicleIds)
@@ -65,7 +81,7 @@ router.post(
         if (!vehicle) {
           throw new HttpError(
             400,
-            "No available ambulance vehicle for registration. Please contact the dispatcher to add another ambulance."
+            "No available ambulance vehicle for registration. Please contact the dispatcher to add another ambulance.",
           );
         }
 
@@ -95,6 +111,16 @@ router.post(
 
       return insertedUser;
     });
+
+    if (role === "driver") {
+      await notifyRole({
+        role: "admin",
+        kind: "driver_registered",
+        title: "New Driver Registered",
+        body: `${user.name} registered as driver on the platform.`,
+        data: { userId: user.id },
+      });
+    }
 
     res.status(201).json({
       user,

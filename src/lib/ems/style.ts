@@ -40,16 +40,28 @@ export function priorityClasses(p: Priority) {
 export function statusClasses(s: AmbulanceStatus) {
   switch (s) {
     case "available":
-      return { bg: "bg-status-available/15", text: "text-status-available", dot: "bg-status-available" };
+      return {
+        bg: "bg-status-available/15",
+        text: "text-status-available",
+        dot: "bg-status-available",
+      };
     case "en_route":
       return { bg: "bg-status-enroute/15", text: "text-status-enroute", dot: "bg-status-enroute" };
     case "busy":
       return { bg: "bg-status-busy/15", text: "text-status-busy", dot: "bg-status-busy" };
     case "at_hospital":
-      return { bg: "bg-status-hospital/15", text: "text-status-hospital", dot: "bg-status-hospital" };
+      return {
+        bg: "bg-status-hospital/15",
+        text: "text-status-hospital",
+        dot: "bg-status-hospital",
+      };
     case "offline":
       return { bg: "bg-status-offline/15", text: "text-status-offline", dot: "bg-status-offline" };
     case "maintenance":
-      return { bg: "bg-status-maintenance/15", text: "text-status-maintenance", dot: "bg-status-maintenance" };
+      return {
+        bg: "bg-status-maintenance/15",
+        text: "text-status-maintenance",
+        dot: "bg-status-maintenance",
+      };
   }
 }

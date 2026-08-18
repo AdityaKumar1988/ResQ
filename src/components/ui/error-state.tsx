@@ -21,10 +21,7 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <div
-      className={cn(
-        "flex flex-col items-center justify-center gap-3 p-6 text-center",
-        className,
-      )}
+      className={cn("flex flex-col items-center justify-center gap-3 p-6 text-center", className)}
     >
       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
         <AlertTriangle className="h-5 w-5 text-destructive" />

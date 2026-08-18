@@ -45,19 +45,19 @@ export function NewIncidentDialog({
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
 
-  const [location, setLocation] = useState<{lat: number; lng: number} | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       () => {}, // ignore errors, stays null
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true },
     );
   }, []);
 
   const recommendations = useMemo(
-    () => location ? recommendDrivers({ location, priority }, drivers, 3) : [],
+    () => (location ? recommendDrivers({ location, priority }, drivers, 3) : []),
     [location, priority, drivers],
   );
 
@@ -194,7 +194,7 @@ export function NewIncidentDialog({
 
             <div className="flex items-center gap-2 rounded-md border border-border bg-surface-2/50 px-3 py-2 text-[11px] text-muted-foreground">
               <MapPin className="h-3.5 w-3.5" />
-              {location 
+              {location
                 ? `GPS locked · ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`
                 : "Acquiring GPS…"}
             </div>

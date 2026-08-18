@@ -15,17 +15,10 @@ interface EmptyStateProps {
  * Reusable empty-data placeholder.
  * Shows a muted icon and message when a list or panel has no items.
  */
-export function EmptyState({
-  message = "Nothing here yet",
-  icon,
-  className,
-}: EmptyStateProps) {
+export function EmptyState({ message = "Nothing here yet", icon, className }: EmptyStateProps) {
   return (
     <div
-      className={cn(
-        "flex flex-col items-center justify-center gap-2 p-6 text-center",
-        className,
-      )}
+      className={cn("flex flex-col items-center justify-center gap-2 p-6 text-center", className)}
     >
       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-3 text-muted-foreground/60">
         {icon ?? <Inbox className="h-5 w-5" />}

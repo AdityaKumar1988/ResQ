@@ -20,11 +20,7 @@ router.get(
   asyncHandler(async (_req, res) => {
     const drivers = await db("drivers")
       .leftJoin("users", "users.id", "drivers.user_id")
-      .select(
-        "drivers.*",
-        "users.name as user_name",
-        "users.phone as user_phone",
-      );
+      .select("drivers.*", "users.name as user_name", "users.phone as user_phone");
     res.json({ drivers });
   }),
 );

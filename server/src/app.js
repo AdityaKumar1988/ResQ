@@ -5,6 +5,7 @@ import compression from "compression";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import { config } from "./config.js";
+import { db } from "./db.js";
 import { notFound, errorHandler } from "./middleware/error.js";
 import authRoutes from "./modules/auth/routes.js";
 import userRoutes from "./modules/users/routes.js";
@@ -34,9 +35,26 @@ export function createApp() {
     }),
   );
 
-  app.get("/health", (_req, res) =>
-    res.json({ ok: true, env: config.env, at: new Date().toISOString() }),
-  );
+  app.get("/health", async (_req, res) => {
+    try {
+      await db.raw("SELECT 1");
+      res.json({
+        status: "healthy",
+        database: "connected",
+        ok: true,
+        env: config.env,
+        at: new Date().toISOString(),
+      });
+    } catch {
+      res.status(503).json({
+        status: "unhealthy",
+        database: "disconnected",
+        ok: false,
+        env: config.env,
+        at: new Date().toISOString(),
+      });
+    }
+  });
 
   // Stricter rate limit for auth endpoints (brute-force protection)
   const authLimiter = rateLimit({

@@ -59,6 +59,7 @@ export async function seed(knex) {
       password_hash: hash("admin1234"),
       name: "Admin User",
       role: "admin",
+      phone: "+15550000001",
     });
   }
 
@@ -69,6 +70,7 @@ export async function seed(knex) {
       password_hash: hash("dispatch1234"),
       name: "Dana Dispatcher",
       role: "dispatcher",
+      phone: "+15550000002",
     });
   }
 
@@ -87,4 +89,3 @@ export async function seed(knex) {
     ])
     .delete();
 }
-

@@ -18,6 +18,17 @@ router.get(
 );
 
 router.post(
+  "/read-all",
+  asyncHandler(async (req, res) => {
+    await db("notifications")
+      .where({ user_id: req.user.sub })
+      .whereNull("read_at")
+      .update({ read_at: db.fn.now() });
+    res.status(204).end();
+  }),
+);
+
+router.post(
   "/:id/read",
   asyncHandler(async (req, res) => {
     await db("notifications")

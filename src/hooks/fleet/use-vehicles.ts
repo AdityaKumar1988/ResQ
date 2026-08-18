@@ -20,8 +20,9 @@ export function useCreateVehicle() {
       toast.success(`Vehicle ${res.vehicle.plate} added to fleet.`);
       queryClient.invalidateQueries({ queryKey: queryKeys.vehicles.all() });
     },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.error || "Failed to add vehicle.");
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Failed to add vehicle.";
+      toast.error(msg);
     },
   });
 }

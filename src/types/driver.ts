@@ -3,12 +3,7 @@ import type { GeoPoint } from "./incident";
 // ── Ambulance / Driver status ────────────────────────────────────────────────
 
 export type AmbulanceStatus =
-  | "available"
-  | "en_route"
-  | "busy"
-  | "at_hospital"
-  | "offline"
-  | "maintenance";
+  "available" | "en_route" | "busy" | "at_hospital" | "offline" | "maintenance";
 
 // ── Driver ───────────────────────────────────────────────────────────────────
 

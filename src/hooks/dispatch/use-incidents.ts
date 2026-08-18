@@ -19,7 +19,10 @@ export function useIncidents(filters?: IncidentFilters) {
       data.incidents.map((i) => ({
         ...i,
         // Ensure location GeoPoint is always present (API client normalizes snake_case but let's be safe)
-        location: { lat: i.lat ?? (i as unknown as Record<string, Record<string, number>>).location?.lat ?? 0, lng: i.lng ?? (i as unknown as Record<string, Record<string, number>>).location?.lng ?? 0 },
+        location: {
+          lat: i.lat ?? (i as unknown as Record<string, Record<string, number>>).location?.lat ?? 0,
+          lng: i.lng ?? (i as unknown as Record<string, Record<string, number>>).location?.lng ?? 0,
+        },
         timeline: i.timeline ?? [],
       })),
   });
@@ -74,9 +77,21 @@ export function useAssignDriver() {
       // Invalidate list + drivers (driver status changed)
       queryClient.invalidateQueries({ queryKey: queryKeys.incidents.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.drivers.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.vehicles.all() });
       toast.success(`Driver assigned to ${data.incident.code}`);
     },
-    onError: (err: ApiError) => toast.error(`Assignment failed: ${err.message}`),
+    onError: (err: ApiError) => {
+      // Invalidate queries immediately so UI reflects updated availability
+      queryClient.invalidateQueries({ queryKey: queryKeys.incidents.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.drivers.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.vehicles.all() });
+
+      if (err.status === 409 || err.message?.toLowerCase().includes("no longer available")) {
+        toast.error("Ambulance is no longer available. Another dispatcher may have assigned it.");
+      } else {
+        toast.error(`Assignment failed: ${err.message}`);
+      }
+    },
   });
 }
 
@@ -90,16 +105,19 @@ export function useUpdateIncidentStatus() {
     onMutate: async ({ id, status }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.incidents.detail(id) });
       const snapshot = queryClient.getQueryData(queryKeys.incidents.detail(id));
-      queryClient.setQueryData(queryKeys.incidents.detail(id), (old: { incident: Incident } | undefined) =>
-        old ? { ...old, incident: { ...old.incident, status } } : old,
+      queryClient.setQueryData(
+        queryKeys.incidents.detail(id),
+        (old: { incident: Incident } | undefined) =>
+          old ? { ...old, incident: { ...old.incident, status } } : old,
       );
       return { snapshot, id };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (err: ApiError, _vars, ctx) => {
       if (ctx) {
         queryClient.setQueryData(queryKeys.incidents.detail(ctx.id), ctx.snapshot);
       }
-      toast.error("Status update failed");
+      queryClient.invalidateQueries({ queryKey: queryKeys.incidents.all() });
+      toast.error(err.message || "Status update failed");
     },
     onSettled: (_data, _err, { id }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.incidents.detail(id) });

@@ -28,8 +28,11 @@ const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Enter a valid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  phone: z.string().optional(),
-  role: z.enum(["citizen", "dispatcher", "driver", "admin"]),
+  phone: z
+    .string()
+    .min(7, "Phone number is required (min 7 digits)")
+    .regex(/^\+?[0-9\s\-()]{7,20}$/, "Please enter a valid phone number"),
+  role: z.enum(["citizen", "driver"]),
 });
 
 type LoginValues = z.infer<typeof loginSchema>;
@@ -167,7 +170,11 @@ function LoginPage() {
           {tab === "register" && (
             <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
               <Field label="Full name" error={registerForm.formState.errors.name?.message}>
-                <input {...registerForm.register("name")} placeholder="Jane Smith" className="input-base" />
+                <input
+                  {...registerForm.register("name")}
+                  placeholder="Jane Smith"
+                  className="input-base"
+                />
               </Field>
               <Field label="Email" error={registerForm.formState.errors.email?.message}>
                 <input
@@ -187,15 +194,19 @@ function LoginPage() {
                   className="input-base"
                 />
               </Field>
-              <Field label="Phone (optional)">
-                <input {...registerForm.register("phone")} placeholder="+1 555 000 0000" className="input-base" />
+              <Field label="Phone number *" error={registerForm.formState.errors.phone?.message}>
+                <input
+                  {...registerForm.register("phone")}
+                  placeholder="+1 555 000 0000"
+                  className="input-base"
+                />
               </Field>
               <div>
                 <label className="mb-1.5 block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
                   Role
                 </label>
                 <div className="space-y-1.5">
-                  {(["citizen", "dispatcher", "driver", "admin"] as UserRole[]).map((r) => {
+                  {(["citizen", "driver"] as const).map((r) => {
                     const checked = registerForm.watch("role") === r;
                     return (
                       <label

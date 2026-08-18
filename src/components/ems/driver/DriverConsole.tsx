@@ -26,7 +26,11 @@ import {
   type Incident,
 } from "@/lib/ems/types";
 import { etaMinutes, formatRelative, haversineKm } from "@/lib/ems/geo";
-import { useDrivers, useUpdateDriverLocation, useUpdateDriverStatus } from "@/hooks/fleet/use-drivers";
+import {
+  useDrivers,
+  useUpdateDriverLocation,
+  useUpdateDriverStatus,
+} from "@/hooks/fleet/use-drivers";
 import { useIncidents, useUpdateIncidentStatus } from "@/hooks/dispatch/use-incidents";
 import { useHospitals } from "@/hooks/fleet/use-hospitals";
 import { useAuth } from "@/lib/auth-context";
@@ -61,19 +65,13 @@ export function DriverConsole() {
 
   // In real mode, the driver is the currently logged-in user
   // Fallback: first driver in the list for demo purposes
-  const driver = useMemo(
-    () => drivers.find((d) => d.userId === user?.id) ?? null,
-    [drivers, user],
-  );
+  const driver = useMemo(() => drivers.find((d) => d.userId === user?.id) ?? null, [drivers, user]);
   const driverId = driver?.id ?? null;
 
   const activeIncidents = useMemo(
     () =>
       incidents.filter(
-        (i) =>
-          i.driverId === driverId &&
-          i.status !== "completed" &&
-          i.status !== "cancelled",
+        (i) => i.driverId === driverId && i.status !== "completed" && i.status !== "cancelled",
       ),
     [incidents, driverId],
   );
@@ -81,14 +79,9 @@ export function DriverConsole() {
     () =>
       incidents
         .filter(
-          (i) =>
-            i.driverId === driverId &&
-            (i.status === "completed" || i.status === "cancelled"),
+          (i) => i.driverId === driverId && (i.status === "completed" || i.status === "cancelled"),
         )
-        .sort(
-          (a, b) =>
-            new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime(),
-        ),
+        .sort((a, b) => new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime()),
     [incidents, driverId],
   );
 
@@ -112,7 +105,7 @@ export function DriverConsole() {
       { enableHighAccuracy: true, maximumAge: 5000 },
     );
     return () => navigator.geolocation.clearWatch(watchId);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [driver?.id]);
 
   if (isLoading) {
@@ -140,8 +133,9 @@ export function DriverConsole() {
   }
 
   const incident = activeIncidents[0] ?? null;
-  const hospital =
-    incident?.hospitalId ? hospitals.find((h) => h.id === incident.hospitalId) ?? null : null;
+  const hospital = incident?.hospitalId
+    ? (hospitals.find((h) => h.id === incident.hospitalId) ?? null)
+    : null;
 
   const onShift = driver.status !== "offline";
 
@@ -255,7 +249,6 @@ function DriverCard({
   onToggleShift: () => void;
   onShift: boolean;
 }) {
-
   const [open, setOpen] = useState(false);
   return (
     <div className="relative rounded-lg border border-border bg-surface p-3 panel">
@@ -273,9 +266,7 @@ function DriverCard({
           <div className="truncate text-sm font-semibold">{driver.name}</div>
           <div className="truncate text-[11px] text-muted-foreground">
             <span className="font-mono">{driver.callSign}</span> ·{" "}
-            <span className="uppercase tracking-wider">
-              {onShift ? "on shift" : "off shift"}
-            </span>
+            <span className="uppercase tracking-wider">{onShift ? "on shift" : "off shift"}</span>
           </div>
         </div>
         <button
@@ -313,7 +304,6 @@ function DriverCard({
       )}
 
       <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-        
         <MiniStat icon={Star} label="Rating" value={Number(driver.rating ?? 0).toFixed(1)} />
         <MiniStat icon={CheckCircle2} label="Runs" value={driver.missionsCompleted} />
         <MiniStat
@@ -339,9 +329,6 @@ function DriverCard({
     </div>
   );
 }
-
-
-
 
 function MiniStat({
   icon: Icon,
@@ -425,7 +412,7 @@ function MissionPanel({
   const meta = PRIORITY_META[incident.priority];
   const target =
     incident.status === "patient_loaded" && incident.hospitalId
-      ? hospitals.find((h) => h.id === incident.hospitalId)?.location ?? incident.location
+      ? (hospitals.find((h) => h.id === incident.hospitalId)?.location ?? incident.location)
       : incident.location;
   const dist = haversineKm(driverLoc, target);
   const eta = etaMinutes(dist);
@@ -474,11 +461,15 @@ function MissionPanel({
           label={incident.status === "patient_loaded" ? "To hospital" : "Patient"}
           value={
             incident.status === "patient_loaded"
-              ? hospitals.find((h) => h.id === incident.hospitalId)?.name.split(" ")[0] ?? "—"
+              ? (hospitals.find((h) => h.id === incident.hospitalId)?.name.split(" ")[0] ?? "—")
               : (incident.citizenName ?? "—").split(" ")[0]
           }
         />
-        <NavStat icon={PhoneCall} label="Contact" value={(incident.citizenPhone ?? "—").slice(-4)} />
+        <NavStat
+          icon={PhoneCall}
+          label="Contact"
+          value={(incident.citizenPhone ?? "—").slice(-4)}
+        />
       </div>
 
       {action && (
@@ -491,10 +482,8 @@ function MissionPanel({
               "flex-1 rounded-md px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-60",
               action.tone === "primary" &&
                 "bg-primary text-primary-foreground shadow-glow hover:opacity-90",
-              action.tone === "warn" &&
-                "bg-status-enroute text-background hover:opacity-90",
-              action.tone === "success" &&
-                "bg-status-available text-background hover:opacity-90",
+              action.tone === "warn" && "bg-status-enroute text-background hover:opacity-90",
+              action.tone === "success" && "bg-status-available text-background hover:opacity-90",
             )}
           >
             <span className="inline-flex items-center gap-2">
@@ -557,11 +546,7 @@ function MetricsPanel({
           label="Avg resp"
           value={`${Math.round(driver.avgResponseSec / 60)}m`}
         />
-        <MiniStat
-          icon={Activity}
-          label="Status"
-          value={driver.status.replace("_", " ")}
-        />
+        <MiniStat icon={Activity} label="Status" value={driver.status.replace("_", " ")} />
       </div>
     </div>
   );

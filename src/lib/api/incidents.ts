@@ -38,8 +38,7 @@ export const incidentsApi = {
 
   get: (id: string) => client.get<IncidentDetailResponse>(`/incidents/${id}`),
 
-  create: (data: CreateIncidentInput) =>
-    client.post<IncidentResponse>("/incidents", data),
+  create: (data: CreateIncidentInput) => client.post<IncidentResponse>("/incidents", data),
 
   assign: ({ incidentId, driverId }: AssignDriverInput) =>
     client.post<IncidentResponse>(`/incidents/${incidentId}/assign`, { driverId }),

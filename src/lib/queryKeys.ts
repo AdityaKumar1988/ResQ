@@ -35,8 +35,7 @@ export const queryKeys = {
 
   // ── Dispatch ──────────────────────────────────────────────────────────────
   dispatch: {
-    recommendations: (incidentId: string) =>
-      ["dispatch", "recommend", incidentId] as const,
+    recommendations: (incidentId: string) => ["dispatch", "recommend", incidentId] as const,
   },
 
   // ── Analytics ─────────────────────────────────────────────────────────────

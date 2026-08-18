@@ -26,12 +26,7 @@ export type IncidentStatus =
   | "cancelled";
 
 export type AmbulanceStatus =
-  | "available"
-  | "en_route"
-  | "busy"
-  | "at_hospital"
-  | "offline"
-  | "maintenance";
+  "available" | "en_route" | "busy" | "at_hospital" | "offline" | "maintenance";
 
 export interface GeoPoint {
   lat: number;

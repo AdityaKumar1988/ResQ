@@ -4,7 +4,13 @@ import { lazy, Suspense } from "react";
 // Leaflet touches window at import time — must be gated behind ClientOnly.
 const LiveMap = lazy(() => import("./LiveMap"));
 
-export function LiveMapWrapper({ selectedId, onSelect }: { selectedId: string | null; onSelect: (id: string) => void }) {
+export function LiveMapWrapper({
+  selectedId,
+  onSelect,
+}: {
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+}) {
   return (
     <ClientOnly fallback={<MapSkeleton />}>
       <Suspense fallback={<MapSkeleton />}>

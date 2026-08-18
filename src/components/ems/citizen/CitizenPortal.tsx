@@ -77,10 +77,7 @@ export function CitizenPortal() {
     return () => clearInterval(t);
   }, []);
   const myIncidents = useMemo(
-    () =>
-      incidents.filter(
-        (i) => i.citizenUserId === user?.id,
-      ),
+    () => incidents.filter((i) => i.citizenUserId === user?.id),
     [incidents, user],
   );
   const activeIncident: Incident | null = useMemo(() => {

@@ -43,3 +43,35 @@ export function useMarkNotificationRead() {
     },
   });
 }
+
+export function useMarkAllNotificationsRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: notificationsApi.markAllRead,
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications.all() });
+      const snapshot = queryClient.getQueryData(queryKeys.notifications.all());
+      const now = new Date().toISOString();
+      queryClient.setQueryData(
+        queryKeys.notifications.all(),
+        (old: { notifications: Notification[] } | undefined) =>
+          old
+            ? {
+                notifications: old.notifications.map((n) =>
+                  !n.readAt ? { ...n, readAt: now } : n,
+                ),
+              }
+            : old,
+      );
+      return { snapshot };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.snapshot) {
+        queryClient.setQueryData(queryKeys.notifications.all(), ctx.snapshot);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all() });
+    },
+  });
+}

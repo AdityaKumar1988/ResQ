@@ -20,8 +20,8 @@ export function useDrivers() {
           // Backend may send location_lat/location_lng (normalized to locationLat/locationLng)
           // or a nested location object — normalize to GeoPoint
           location: {
-            lat: Number((raw.locationLat ?? existingLoc?.lat) ?? 0),
-            lng: Number((raw.locationLng ?? existingLoc?.lng) ?? 0),
+            lat: Number(raw.locationLat ?? existingLoc?.lat ?? 0),
+            lng: Number(raw.locationLng ?? existingLoc?.lng ?? 0),
           },
         };
       }),
@@ -47,16 +47,14 @@ export function useUpdateDriverLocation() {
     mutationFn: driversApi.updateLocation,
     onSuccess: (data) => {
       // Update driver in the all-drivers list cache
-      queryClient.setQueryData(
-        queryKeys.drivers.all(),
-        (old: { drivers: Driver[] } | undefined) =>
-          old
-            ? {
-                drivers: old.drivers.map((d) =>
-                  d.id === data.driver.id ? { ...d, ...data.driver } : d,
-                ),
-              }
-            : old,
+      queryClient.setQueryData(queryKeys.drivers.all(), (old: { drivers: Driver[] } | undefined) =>
+        old
+          ? {
+              drivers: old.drivers.map((d) =>
+                d.id === data.driver.id ? { ...d, ...data.driver } : d,
+              ),
+            }
+          : old,
       );
     },
   });
@@ -69,16 +67,14 @@ export function useUpdateDriverStatus() {
   return useMutation({
     mutationFn: driversApi.updateStatus,
     onSuccess: (data) => {
-      queryClient.setQueryData(
-        queryKeys.drivers.all(),
-        (old: { drivers: Driver[] } | undefined) =>
-          old
-            ? {
-                drivers: old.drivers.map((d) =>
-                  d.id === data.driver.id ? { ...d, status: data.driver.status } : d,
-                ),
-              }
-            : old,
+      queryClient.setQueryData(queryKeys.drivers.all(), (old: { drivers: Driver[] } | undefined) =>
+        old
+          ? {
+              drivers: old.drivers.map((d) =>
+                d.id === data.driver.id ? { ...d, status: data.driver.status } : d,
+              ),
+            }
+          : old,
       );
       queryClient.invalidateQueries({ queryKey: queryKeys.drivers.me() });
     },

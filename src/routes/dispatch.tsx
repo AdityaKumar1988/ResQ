@@ -38,17 +38,22 @@ function DispatchPage() {
           <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[320px_1fr_320px]">
             <div className="min-h-0">
               <IncidentFeed
-    onCreate={() => setDialogOpen(true)}
-    selectedId={selectedIncidentId}
-    onSelect={setSelectedIncidentId}
-/>
+                onCreate={() => setDialogOpen(true)}
+                selectedId={selectedIncidentId}
+                onSelect={setSelectedIncidentId}
+              />
             </div>
             <div className="flex min-h-0 flex-col gap-3">
-              <div className="min-h-0 flex-1">{!dialogOpen && <LiveMapWrapper selectedId={selectedIncidentId} onSelect={setSelectedIncidentId} />}</div>
+              <div className="min-h-0 flex-1">
+                {!dialogOpen && (
+                  <LiveMapWrapper
+                    selectedId={selectedIncidentId}
+                    onSelect={setSelectedIncidentId}
+                  />
+                )}
+              </div>
               <div className="rounded-lg border border-border bg-surface panel">
-                <SelectedIncidentPanel
-    selectedId={selectedIncidentId}
-/>
+                <SelectedIncidentPanel selectedId={selectedIncidentId} />
               </div>
             </div>
             <div className="min-h-0">

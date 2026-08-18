@@ -35,7 +35,9 @@ export function getSocket(): Socket {
     socket.on("disconnect", (reason) => logger.socket("disconnected", reason));
     socket.on("connect_error", (err) => logger.warn("[socket] connect_error:", err.message));
     socket.on("reconnect_attempt", (n) => logger.socket("reconnect_attempt", n));
-    socket.on("reconnect_failed", () => logger.error("[socket] reconnect failed after all attempts"));
+    socket.on("reconnect_failed", () =>
+      logger.error("[socket] reconnect failed after all attempts"),
+    );
   }
 
   return socket;

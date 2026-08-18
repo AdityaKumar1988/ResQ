@@ -13,20 +13,13 @@ interface SkeletonListProps {
  * Animated skeleton list for loading states.
  * Renders N pulsing placeholder cards.
  */
-export function SkeletonList({
-  count = 4,
-  itemHeight = "h-16",
-  className,
-}: SkeletonListProps) {
+export function SkeletonList({ count = 4, itemHeight = "h-16", className }: SkeletonListProps) {
   return (
     <div className={cn("space-y-2 p-2", className)}>
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className={cn(
-            "animate-pulse rounded-md border border-border bg-surface-2",
-            itemHeight,
-          )}
+          className={cn("animate-pulse rounded-md border border-border bg-surface-2", itemHeight)}
         >
           <div className="flex h-full items-center gap-3 px-3">
             <div className="h-8 w-8 shrink-0 rounded bg-surface-3" />

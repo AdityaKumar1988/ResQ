@@ -9,4 +9,6 @@ export const notificationsApi = {
   list: () => client.get<NotificationsListResponse>("/notifications"),
 
   markRead: (id: string) => client.post<void>(`/notifications/${id}/read`),
+
+  markAllRead: () => client.post<void>("/notifications/read-all"),
 };

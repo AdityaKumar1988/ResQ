@@ -10,7 +10,7 @@ export async function up(knex) {
 
   // Unique index on vehicle_id where vehicle_id is not null
   await knex.raw(
-    'CREATE UNIQUE INDEX IF NOT EXISTS "drivers_vehicle_id_unique" ON "drivers" ("vehicle_id") WHERE "vehicle_id" IS NOT NULL'
+    'CREATE UNIQUE INDEX IF NOT EXISTS "drivers_vehicle_id_unique" ON "drivers" ("vehicle_id") WHERE "vehicle_id" IS NOT NULL',
   );
 }
 

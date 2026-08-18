@@ -3,13 +3,9 @@ import "dotenv/config";
 export const config = {
   env: process.env.NODE_ENV || "development",
   port: Number(process.env.PORT || 4000),
-  corsOrigin: (process.env.CORS_ORIGIN || "http://localhost:8080")
-    .split(",")
-    .map((s) => s.trim()),
+  corsOrigin: (process.env.CORS_ORIGIN || "http://localhost:8080").split(",").map((s) => s.trim()),
   db: {
-    url:
-      process.env.DATABASE_URL ||
-      "postgres://ems:ems@localhost:5432/smart_ems",
+    url: process.env.DATABASE_URL || "postgres://ems:ems@localhost:5432/smart_ems",
     ssl: process.env.PGSSL === "true",
   },
   jwt: {

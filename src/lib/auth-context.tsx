@@ -93,10 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   // ── Role helpers ─────────────────────────────────────────────────────────────
-  const can = useCallback(
-    (roles: UserRole[]) => !!user && roles.includes(user.role),
-    [user],
-  );
+  const can = useCallback((roles: UserRole[]) => !!user && roles.includes(user.role), [user]);
 
   return (
     <AuthContext.Provider

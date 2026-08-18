@@ -30,9 +30,21 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { to: "/dispatch", label: "Command Center", icon: LayoutDashboard, allowedRoles: ["dispatcher", "admin"], badge: (c) => c.active || null },
+  {
+    to: "/dispatch",
+    label: "Command Center",
+    icon: LayoutDashboard,
+    allowedRoles: ["dispatcher", "admin"],
+    badge: (c) => c.active || null,
+  },
   { to: "/incidents", label: "Incidents", icon: Siren, allowedRoles: ["dispatcher", "admin"] },
-  { to: "/fleet", label: "Fleet", icon: Truck, allowedRoles: ["dispatcher", "admin"], badge: (c) => `${c.available}` },
+  {
+    to: "/fleet",
+    label: "Fleet",
+    icon: Truck,
+    allowedRoles: ["dispatcher", "admin"],
+    badge: (c) => `${c.available}`,
+  },
   { to: "/analytics", label: "Analytics", icon: BarChart3, allowedRoles: ["dispatcher", "admin"] },
   { to: "/citizen", label: "Citizen Portal", icon: LifeBuoy, allowedRoles: ["citizen", "admin"] },
   { to: "/driver", label: "Driver App", icon: Radio, allowedRoles: ["driver", "admin"] },
@@ -54,7 +66,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => clearInterval(t);
   }, []);
 
-  const activeIncidents = incidents.filter((i) => i.status !== "completed" && i.status !== "cancelled");
+  const activeIncidents = incidents.filter(
+    (i) => i.status !== "completed" && i.status !== "cancelled",
+  );
   const availableUnits = drivers.filter((d) => d.status === "available").length;
   const enrouteUnits = drivers.filter((d) => d.status === "en_route").length;
   const unreadCount = notifData?.unreadCount ?? 0;
@@ -86,7 +100,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                   key={item.to}
                   item={item}
                   pathname={pathname}
-                  badge={item.badge?.({ active: activeIncidents.length, available: availableUnits })}
+                  badge={item.badge?.({
+                    active: activeIncidents.length,
+                    available: availableUnits,
+                  })}
                 />
               ))}
             </NavGroup>
@@ -107,7 +124,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
             <div className="min-w-0 flex-1 leading-tight">
               <div className="truncate text-xs font-medium">{user?.name ?? "Unknown"}</div>
-              <div className="truncate text-[10px] text-muted-foreground capitalize">{user?.role ?? "—"}</div>
+              <div className="truncate text-[10px] text-muted-foreground capitalize">
+                {user?.role ?? "—"}
+              </div>
             </div>
             <button
               onClick={logout}
@@ -149,7 +168,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status-available opacity-60" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-status-available" />
               </span>
-              LIVE · <span suppressHydrationWarning>{now ? now.toLocaleTimeString("en-US", { hour12: false }) : "--:--:--"}</span>
+              LIVE ·{" "}
+              <span suppressHydrationWarning>
+                {now ? now.toLocaleTimeString("en-US", { hour12: false }) : "--:--:--"}
+              </span>
             </div>
             <div className="relative">
               <button

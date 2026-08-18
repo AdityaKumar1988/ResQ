@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Bell, Check, CheckCheck, Clock, Loader2, Siren } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useNotifications, useMarkNotificationRead } from "@/hooks/notifications/use-notifications";
+import {
+  useNotifications,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+} from "@/hooks/notifications/use-notifications";
 import { formatRelative } from "@/lib/ems/geo";
 import type { Notification } from "@/types/notification";
 
@@ -9,15 +13,10 @@ import type { Notification } from "@/types/notification";
  * NotificationCenter — dropdown panel toggled from the Bell icon in AppShell.
  * Shows a list of real notifications with read/unread states and mark-all-read.
  */
-export function NotificationCenter({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
+export function NotificationCenter({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { data: notifData, isLoading } = useNotifications();
   const markRead = useMarkNotificationRead();
+  const markAllRead = useMarkAllNotificationsRead();
 
   if (!open) return null;
 
@@ -25,18 +24,13 @@ export function NotificationCenter({
   const unreadCount = notifData?.unreadCount ?? 0;
 
   function handleMarkAllRead() {
-    notifications
-      .filter((n) => !n.readAt)
-      .forEach((n) => markRead.mutate(n.id));
+    markAllRead.mutate();
   }
 
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 z-40" onClick={onClose} />
 
       {/* Panel */}
       <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-lg border border-border-strong bg-elevated shadow-xl animate-in fade-in slide-in-from-top-1 duration-150">
@@ -44,9 +38,7 @@ export function NotificationCenter({
         <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
           <div className="flex items-center gap-2">
             <Bell className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-xs font-semibold uppercase tracking-wider">
-              Notifications
-            </span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Notifications</span>
             {unreadCount > 0 && (
               <span className="rounded-full bg-primary/20 px-1.5 py-0.5 text-[9px] font-bold text-primary">
                 {unreadCount}
@@ -81,13 +73,15 @@ export function NotificationCenter({
           )}
 
           {!isLoading &&
-            notifications.slice(0, 30).map((n) => (
-              <NotificationItem
-                key={n.id}
-                notification={n}
-                onMarkRead={() => markRead.mutate(n.id)}
-              />
-            ))}
+            notifications
+              .slice(0, 30)
+              .map((n) => (
+                <NotificationItem
+                  key={n.id}
+                  notification={n}
+                  onMarkRead={() => markRead.mutate(n.id)}
+                />
+              ))}
         </div>
       </div>
     </>
@@ -102,20 +96,19 @@ function NotificationItem({
   onMarkRead: () => void;
 }) {
   const isUnread = !n.readAt;
-  const iconClass = n.kind === "incident_created"
-    ? "bg-p1/20 text-p1"
-    : n.kind === "incident_completed"
-      ? "bg-status-available/20 text-status-available"
-      : "bg-primary/20 text-primary";
+  const iconClass =
+    n.kind === "incident_created"
+      ? "bg-p1/20 text-p1"
+      : n.kind === "incident_completed"
+        ? "bg-status-available/20 text-status-available"
+        : "bg-primary/20 text-primary";
 
   return (
     <button
       onClick={isUnread ? onMarkRead : undefined}
       className={cn(
         "flex w-full items-start gap-2.5 border-b border-border px-4 py-2.5 text-left transition-colors last:border-b-0",
-        isUnread
-          ? "bg-primary/[0.03] hover:bg-primary/[0.06]"
-          : "hover:bg-surface-2",
+        isUnread ? "bg-primary/[0.03] hover:bg-primary/[0.06]" : "hover:bg-surface-2",
       )}
     >
       <div
@@ -142,14 +135,10 @@ function NotificationItem({
           >
             {n.title}
           </span>
-          {isUnread && (
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-          )}
+          {isUnread && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
         </div>
         {n.body && (
-          <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
-            {n.body}
-          </div>
+          <div className="mt-0.5 truncate text-[11px] text-muted-foreground">{n.body}</div>
         )}
         <div className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground/70">
           <Clock className="h-2.5 w-2.5" />

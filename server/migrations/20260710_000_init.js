@@ -26,14 +26,7 @@ export async function up(knex) {
     t.string("status")
       .notNullable()
       .defaultTo("available")
-      .checkIn([
-        "available",
-        "en_route",
-        "busy",
-        "at_hospital",
-        "offline",
-        "maintenance",
-      ]);
+      .checkIn(["available", "en_route", "busy", "at_hospital", "offline", "maintenance"]);
     t.timestamps(true, true);
   });
 
@@ -114,10 +107,7 @@ export async function up(knex) {
 
   await knex.schema.createTable("incident_events", (t) => {
     t.bigIncrements("id");
-    t.uuid("incident_id")
-      .references("id")
-      .inTable("incidents")
-      .onDelete("CASCADE");
+    t.uuid("incident_id").references("id").inTable("incidents").onDelete("CASCADE");
     t.string("status").notNullable();
     t.uuid("actor_id");
     t.string("actor_name");

@@ -42,34 +42,34 @@ npm run dev
 All routes are under `/api`. Authenticated routes require
 `Authorization: Bearer <accessToken>`.
 
-| Method | Path                                | Roles                    |
-| ------ | ----------------------------------- | ------------------------ |
-| POST   | `/api/auth/register`                | public                   |
-| POST   | `/api/auth/login`                   | public                   |
-| POST   | `/api/auth/refresh`                 | public                   |
-| GET    | `/api/auth/me`                      | any                      |
-| GET    | `/api/users`                        | admin                    |
-| PATCH  | `/api/users/:id/role`               | admin                    |
-| GET    | `/api/drivers`                      | any                      |
-| GET    | `/api/drivers/me`                   | any                      |
-| POST   | `/api/drivers/me/location`          | driver                   |
-| PATCH  | `/api/drivers/me/status`            | driver                   |
-| GET    | `/api/vehicles`                     | any                      |
-| POST   | `/api/vehicles`                     | admin, dispatcher        |
-| PATCH  | `/api/vehicles/:id`                 | admin, dispatcher        |
-| DELETE | `/api/vehicles/:id`                 | admin                    |
-| GET    | `/api/hospitals`                    | any                      |
-| PATCH  | `/api/hospitals/:id/beds`           | admin, dispatcher        |
-| GET    | `/api/incidents`                    | any                      |
-| GET    | `/api/incidents/:id`                | any                      |
-| POST   | `/api/incidents`                    | any                      |
-| POST   | `/api/incidents/:id/assign`         | admin, dispatcher        |
-| PATCH  | `/api/incidents/:id/status`         | any (driver/dispatcher)  |
-| GET    | `/api/dispatch/recommend/:incId`    | admin, dispatcher        |
-| GET    | `/api/analytics/overview`           | admin, dispatcher        |
-| GET    | `/api/analytics/sla`                | admin, dispatcher        |
-| GET    | `/api/notifications`                | any                      |
-| POST   | `/api/notifications/:id/read`       | any                      |
+| Method | Path                             | Roles                   |
+| ------ | -------------------------------- | ----------------------- |
+| POST   | `/api/auth/register`             | public                  |
+| POST   | `/api/auth/login`                | public                  |
+| POST   | `/api/auth/refresh`              | public                  |
+| GET    | `/api/auth/me`                   | any                     |
+| GET    | `/api/users`                     | admin                   |
+| PATCH  | `/api/users/:id/role`            | admin                   |
+| GET    | `/api/drivers`                   | any                     |
+| GET    | `/api/drivers/me`                | any                     |
+| POST   | `/api/drivers/me/location`       | driver                  |
+| PATCH  | `/api/drivers/me/status`         | driver                  |
+| GET    | `/api/vehicles`                  | any                     |
+| POST   | `/api/vehicles`                  | admin, dispatcher       |
+| PATCH  | `/api/vehicles/:id`              | admin, dispatcher       |
+| DELETE | `/api/vehicles/:id`              | admin                   |
+| GET    | `/api/hospitals`                 | any                     |
+| PATCH  | `/api/hospitals/:id/beds`        | admin, dispatcher       |
+| GET    | `/api/incidents`                 | any                     |
+| GET    | `/api/incidents/:id`             | any                     |
+| POST   | `/api/incidents`                 | any                     |
+| POST   | `/api/incidents/:id/assign`      | admin, dispatcher       |
+| PATCH  | `/api/incidents/:id/status`      | any (driver/dispatcher) |
+| GET    | `/api/dispatch/recommend/:incId` | admin, dispatcher       |
+| GET    | `/api/analytics/overview`        | admin, dispatcher       |
+| GET    | `/api/analytics/sla`             | admin, dispatcher       |
+| GET    | `/api/notifications`             | any                     |
+| POST   | `/api/notifications/:id/read`    | any                     |
 
 Health check: `GET /health`.
 
@@ -85,12 +85,12 @@ Client emits: `driver:location { lat, lng, heading }`.
 
 ## Seed accounts
 
-| Role       | Email                | Password       |
-| ---------- | -------------------- | -------------- |
-| admin      | admin@ems.local      | admin1234      |
-| dispatcher | dispatch@ems.local   | dispatch1234   |
-| driver     | driver1..8@ems.local | driver1234     |
-| citizen    | citizen@ems.local    | citizen1234    |
+| Role       | Email                | Password     |
+| ---------- | -------------------- | ------------ |
+| admin      | admin@ems.local      | admin1234    |
+| dispatcher | dispatch@ems.local   | dispatch1234 |
+| driver     | driver1..8@ems.local | driver1234   |
+| citizen    | citizen@ems.local    | citizen1234  |
 
 ## Project layout
 

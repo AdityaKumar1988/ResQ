@@ -26,9 +26,7 @@ function createWrapper() {
     },
   });
   return function Wrapper({ children }: { children: ReactNode }) {
-    return (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   };
 }
 
@@ -54,9 +52,9 @@ describe("useIncidents", () => {
         priority: "P1" as const,
         type: "cardiac" as const,
         status: "reported" as const,
-        lat: 40.7128,
-        lng: -74.006,
-        location: { lat: 40.7128, lng: -74.006 },
+        lat: 12.9249,
+        lng: 79.135,
+        location: { lat: 12.9249, lng: 79.135 },
         address: "123 Test St",
         notes: undefined,
         citizenName: "Jane",

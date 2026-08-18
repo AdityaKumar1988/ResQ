@@ -8,7 +8,10 @@ export const Route = createFileRoute("/incidents")({
   component: () => (
     <ProtectedRoute allowedRoles={["dispatcher", "admin"]}>
       <AppShell>
-        <ComingSoon title="Incident registry" note="Full incident timeline, filters, exports — shipping in the next module." />
+        <ComingSoon
+          title="Incident registry"
+          note="Full incident timeline, filters, exports — shipping in the next module."
+        />
       </AppShell>
     </ProtectedRoute>
   ),

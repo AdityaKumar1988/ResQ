@@ -4,6 +4,8 @@ import {
   Building2,
   CheckCircle2,
   ClipboardList,
+  Eye,
+  EyeOff,
   Hospital as HospitalIcon,
   Radio,
   Search,
@@ -12,6 +14,7 @@ import {
   ShieldCheck,
   Truck,
   UserCog,
+  UserPlus,
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,7 +23,7 @@ import { useIncidents } from "@/hooks/dispatch/use-incidents";
 import { useDrivers } from "@/hooks/fleet/use-drivers";
 import { useVehicles, useCreateVehicle } from "@/hooks/fleet/use-vehicles";
 import { useHospitals } from "@/hooks/fleet/use-hospitals";
-import { useUsers, type UserInfo } from "@/hooks/fleet/use-users";
+import { useUsers, useCreateStaff, type UserInfo } from "@/hooks/fleet/use-users";
 import { useNotifications } from "@/hooks/notifications/use-notifications";
 import { ErrorState } from "@/components/ui/error-state";
 import { SkeletonList } from "@/components/ui/skeleton-list";
@@ -33,11 +36,11 @@ interface StaffUser {
   name: string;
   email: string;
   role: UserRole;
+  phone?: string;
   status: "active" | "invited" | "suspended";
+  createdAt?: string;
   lastActive: string;
 }
-
-
 
 const ROLE_META: Record<UserRole, { label: string; tone: string }> = {
   admin: { label: "Admin", tone: "bg-primary/15 text-primary border-primary/30" },
@@ -80,8 +83,10 @@ export function AdminConsole() {
       name: u.name || "Unknown User",
       email: u.email,
       role: u.role,
+      phone: u.phone,
       status: "active", // hardcoded until API supports status
-      lastActive: "just now", // hardcoded until API supports last active
+      createdAt: u.created_at,
+      lastActive: "Active",
     }));
   }, [rawUsers]);
 
@@ -119,7 +124,7 @@ export function AdminConsole() {
       activeIncidents,
       totalIncidents: incidents.length,
     };
-  }, [drivers, vehicles, incidents, hospitals]);
+  }, [drivers, vehicles, incidents, hospitals, STAFF]);
 
   if (loadingIncidents) {
     return (
@@ -431,6 +436,8 @@ function Panel({
 function UsersTab({ staff }: { staff: StaffUser[] }) {
   const [query, setQuery] = useState("");
   const [role, setRole] = useState<UserRole | "all">("all");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
   const filtered = useMemo(
     () =>
       staff.filter(
@@ -442,6 +449,7 @@ function UsersTab({ staff }: { staff: StaffUser[] }) {
       ),
     [query, role, staff],
   );
+
   return (
     <div className="flex h-full flex-col rounded-lg border border-border bg-surface panel">
       <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
@@ -455,7 +463,7 @@ function UsersTab({ staff }: { staff: StaffUser[] }) {
           />
         </div>
         <div className="flex items-center gap-1">
-          {(["all", "admin", "dispatcher", "driver"] as const).map((r) => (
+          {(["all", "admin", "dispatcher", "driver", "citizen"] as const).map((r) => (
             <button
               key={r}
               type="button"
@@ -467,17 +475,21 @@ function UsersTab({ staff }: { staff: StaffUser[] }) {
                   : "border-border bg-surface-2 text-muted-foreground hover:bg-accent",
               )}
             >
-              {r === "all" ? "All roles" : ROLE_META[r].label}
+              {r === "all" ? "All roles" : (ROLE_META[r]?.label ?? r)}
             </button>
           ))}
         </div>
         <button
           type="button"
-          className="ml-auto rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-glow hover:opacity-90"
+          onClick={() => setShowCreateModal(true)}
+          className="ml-auto flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-glow hover:opacity-90"
         >
-          + Invite user
+          <UserPlus className="h-3.5 w-3.5" />+ Create Staff
         </button>
       </div>
+
+      {showCreateModal && <CreateStaffModal onClose={() => setShowCreateModal(false)} />}
+
       <div className="min-h-0 flex-1 overflow-y-auto">
         <table className="w-full text-left text-xs">
           <thead className="sticky top-0 bg-surface text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -485,60 +497,237 @@ function UsersTab({ staff }: { staff: StaffUser[] }) {
               <th className="px-3 py-2 font-medium">Name</th>
               <th className="px-3 py-2 font-medium">Role</th>
               <th className="px-3 py-2 font-medium">Status</th>
+              <th className="px-3 py-2 font-medium">Created</th>
               <th className="px-3 py-2 font-medium">Last active</th>
-              <th className="px-3 py-2" />
             </tr>
           </thead>
           <tbody>
-            {filtered.map((u) => (
-              <tr key={u.id} className="border-t border-border hover:bg-surface-2/60">
-                <td className="px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-[10px] font-semibold text-primary">
-                      {u.name
-                        .split(" ")
-                        .map((p) => p[0])
-                        .slice(0, 2)
-                        .join("")}
-                    </div>
-                    <div className="leading-tight">
-                      <div className="font-medium">{u.name}</div>
-                      <div className="text-[10px] text-muted-foreground">{u.email}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-3 py-2">
-                  <span
-                    className={cn(
-                      "rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider",
-                      ROLE_META[u.role].tone,
-                    )}
-                  >
-                    {ROLE_META[u.role].label}
-                  </span>
-                </td>
-                <td className="px-3 py-2">
-                  <span
-                    className={cn(
-                      "rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider",
-                      STATUS_TONE[u.status],
-                    )}
-                  >
-                    {u.status}
-                  </span>
-                </td>
-                <td className="px-3 py-2 font-mono text-[10px] text-muted-foreground">
-                  {u.lastActive}
-                </td>
-                <td className="px-3 py-2 text-right">
-                  <button className="rounded border border-border bg-surface-2 px-2 py-1 text-[10px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground">
-                    Manage
-                  </button>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-3 py-8 text-center text-xs text-muted-foreground">
+                  No users found matching the filter criteria.
                 </td>
               </tr>
-            ))}
+            ) : (
+              filtered.map((u) => (
+                <tr key={u.id} className="border-t border-border hover:bg-surface-2/60">
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-[10px] font-semibold text-primary">
+                        {u.name
+                          .split(" ")
+                          .map((p) => p[0])
+                          .slice(0, 2)
+                          .join("")}
+                      </div>
+                      <div className="leading-tight">
+                        <div className="font-medium">{u.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{u.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2">
+                    <span
+                      className={cn(
+                        "rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider",
+                        ROLE_META[u.role]?.tone ?? "bg-muted text-muted-foreground border-border",
+                      )}
+                    >
+                      {ROLE_META[u.role]?.label ?? u.role}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2">
+                    <span
+                      className={cn(
+                        "rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider",
+                        STATUS_TONE[u.status],
+                      )}
+                    >
+                      {u.status}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 font-mono text-[10px] text-muted-foreground">
+                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
+                  </td>
+                  <td className="px-3 py-2 font-mono text-[10px] text-muted-foreground">
+                    {u.lastActive}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+function CreateStaffModal({ onClose }: { onClose: () => void }) {
+  const createStaff = useCreateStaff();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"dispatcher" | "admin">("dispatcher");
+  const [phone, setPhone] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setValidationError(null);
+
+    if (!name.trim()) {
+      setValidationError("Full name is required.");
+      return;
+    }
+    if (!email.trim() || !email.includes("@")) {
+      setValidationError("Please enter a valid email address.");
+      return;
+    }
+    if (password.length < 8) {
+      setValidationError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!phone.trim() || phone.trim().replace(/\D/g, "").length < 7) {
+      setValidationError("Phone number is required (minimum 7 digits).");
+      return;
+    }
+
+    try {
+      await createStaff.mutateAsync({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+        role,
+        phone: phone.trim(),
+      });
+      onClose();
+    } catch {
+      // Error toast handled by useCreateStaff mutation
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-lg border border-border bg-surface panel p-5 shadow-2xl">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary">
+            <UserPlus className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold">Create Staff Account</h3>
+            <p className="text-xs text-muted-foreground">
+              Add a new Dispatcher or Administrator to the platform.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+          {validationError && (
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+              {validationError}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              Full Name
+            </label>
+            <input
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. John Dispatcher"
+              className="mt-1 w-full rounded-md border border-border bg-surface-2 px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              Email Address
+            </label>
+            <input
+              required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="e.g. john@ems.local"
+              className="mt-1 w-full rounded-md border border-border bg-surface-2 px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              Password
+            </label>
+            <div className="relative mt-1">
+              <input
+                required
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Min 8 characters"
+                className="w-full rounded-md border border-border bg-surface-2 px-3 py-1.5 pr-9 text-xs focus:border-primary focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-3.5 w-3.5" />
+                ) : (
+                  <Eye className="h-3.5 w-3.5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              Role
+            </label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value as "dispatcher" | "admin")}
+              className="mt-1 w-full rounded-md border border-border bg-surface-2 px-2.5 py-1.5 text-xs focus:border-primary focus:outline-none"
+            >
+              <option value="dispatcher">Dispatcher — command center operations</option>
+              <option value="admin">Admin — full system administration</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+              Phone Number *
+            </label>
+            <input
+              required
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="e.g. +1 555 0192"
+              className="mt-1 w-full rounded-md border border-border bg-surface-2 px-3 py-1.5 text-xs focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          <div className="mt-5 flex justify-end gap-2 pt-2 border-t border-border">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={createStaff.isPending}
+              className="rounded-md border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={createStaff.isPending}
+              className="rounded-md bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground shadow-glow hover:opacity-90 disabled:opacity-50"
+            >
+              {createStaff.isPending ? "Creating Account…" : "Create Account"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -820,7 +1009,7 @@ function AddVehicleModal({ onClose }: { onClose: () => void }) {
               </label>
               <select
                 value={type}
-                onChange={(e) => setType(e.target.value as any)}
+                onChange={(e) => setType(e.target.value as "ALS" | "BLS" | "ICU" | "MICU")}
                 className="mt-1 w-full rounded-md border border-border bg-surface-2 px-2.5 py-1.5 text-xs focus:border-primary focus:outline-none"
               >
                 <option value="ALS">ALS (Advanced Life Support)</option>
@@ -836,7 +1025,9 @@ function AddVehicleModal({ onClose }: { onClose: () => void }) {
               </label>
               <select
                 value={status}
-                onChange={(e) => setStatus(e.target.value as any)}
+                onChange={(e) =>
+                  setStatus(e.target.value as "available" | "maintenance" | "offline")
+                }
                 className="mt-1 w-full rounded-md border border-border bg-surface-2 px-2.5 py-1.5 text-xs focus:border-primary focus:outline-none"
               >
                 <option value="available">Available</option>

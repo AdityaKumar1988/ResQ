@@ -63,8 +63,10 @@ console.log("✓ Created public/favicon.svg");
 // 2. PROCEDURAL HIGH-QUALITY RASTERIZER
 // ==========================================
 function sdSegment(px, py, ax, ay, bx, by) {
-  const pax = px - ax, pay = py - ay;
-  const bax = bx - ax, bay = by - ay;
+  const pax = px - ax,
+    pay = py - ay;
+  const bax = bx - ax,
+    bay = by - ay;
   const h = Math.max(0, Math.min(1, (pax * bax + pay * bay) / (bax * bax + bay * bay)));
   const dx = pax - bax * h;
   const dy = pay - bay * h;
@@ -81,7 +83,8 @@ function sdRoundedRect(px, py, x, y, w, h, r) {
 }
 
 function sdCircle(px, py, cx, cy, r) {
-  const dx = px - cx, dy = py - cy;
+  const dx = px - cx,
+    dy = py - cy;
   return Math.sqrt(dx * dx + dy * dy) - r;
 }
 
@@ -89,9 +92,12 @@ function sdCircle(px, py, cx, cy, r) {
 function sdPin(px, py) {
   // Pin top circle center (256, 192), radius 144
   // Pin tip at (256, 464)
-  const tipX = 256, tipY = 464;
-  const cX = 256, cY = 192, R = 144;
-  
+  const tipX = 256,
+    tipY = 464;
+  const cX = 256,
+    cY = 192,
+    R = 144;
+
   if (py <= cY) {
     return sdCircle(px, py, cX, cY, R);
   }
@@ -99,8 +105,10 @@ function sdPin(px, py) {
   const dY = tipY - cY;
   const sinA = R / dY;
   const cosA = Math.sqrt(1 - sinA * sinA);
-  const tanLX = cX - R * cosA, tanLY = cY + R * sinA;
-  const tanRX = cX + R * cosA, tanRY = cY + R * sinA;
+  const tanLX = cX - R * cosA,
+    tanLY = cY + R * sinA;
+  const tanRX = cX + R * cosA,
+    tanRY = cY + R * sinA;
 
   const d1 = sdSegment(px, py, tanLX, tanLY, tipX, tipY);
   const d2 = sdSegment(px, py, tanRX, tanRY, tipX, tipY);
@@ -108,8 +116,10 @@ function sdPin(px, py) {
 
   const dSide = Math.min(d1, d2);
   // Check if inside polygon
-  const isInside = py < tipY && px >= (tipX + (tanLX - tipX) * ((tipY - py) / (tipY - tanLY))) &&
-                             px <= (tipX + (tanRX - tipX) * ((tipY - py) / (tipY - tanRY)));
+  const isInside =
+    py < tipY &&
+    px >= tipX + (tanLX - tipX) * ((tipY - py) / (tipY - tanLY)) &&
+    px <= tipX + (tanRX - tipX) * ((tipY - py) / (tipY - tanRY));
   return isInside ? -Math.min(dSide, -dCircle) : Math.min(dSide, dCircle);
 }
 
@@ -140,7 +150,9 @@ function sampleColor(x, y) {
   const pinStrokeWidth = 13; // half stroke
   if (dPin <= 0) {
     // Inside Pin Body
-    r = 12; g = 24; b = 54;
+    r = 12;
+    g = 24;
+    b = 54;
   }
   if (Math.abs(dPin) <= pinStrokeWidth) {
     // Pin Stroke Gradient
@@ -148,7 +160,7 @@ function sampleColor(x, y) {
     const pr = Math.round(0 * (1 - tPin) + 2 * tPin);
     const pg = Math.round(240 * (1 - tPin) + 132 * tPin);
     const pb = Math.round(255 * (1 - tPin) + 199 * tPin);
-    const edgeFade = Math.min(1, (pinStrokeWidth - Math.abs(dPin)) + 0.5);
+    const edgeFade = Math.min(1, pinStrokeWidth - Math.abs(dPin) + 0.5);
     r = Math.round(r * (1 - edgeFade) + pr * edgeFade);
     g = Math.round(g * (1 - edgeFade) + pg * edgeFade);
     b = Math.round(b * (1 - edgeFade) + pb * edgeFade);
@@ -171,16 +183,22 @@ function sampleColor(x, y) {
 
   // 4. ECG Pulse Line
   const ecgPts = [
-    [136, 192], [204, 192], [226, 228], [256, 112], [286, 268], [308, 192], [376, 192]
+    [136, 192],
+    [204, 192],
+    [226, 228],
+    [256, 112],
+    [286, 268],
+    [308, 192],
+    [376, 192],
   ];
   let dPulse = 999;
   for (let i = 0; i < ecgPts.length - 1; i++) {
-    const d = sdSegment(x, y, ecgPts[i][0], ecgPts[i][1], ecgPts[i+1][0], ecgPts[i+1][1]);
+    const d = sdSegment(x, y, ecgPts[i][0], ecgPts[i][1], ecgPts[i + 1][0], ecgPts[i + 1][1]);
     if (d < dPulse) dPulse = d;
   }
   const pulseRadius = 11;
   if (dPulse <= pulseRadius) {
-    const pulseFade = Math.min(1, (pulseRadius - dPulse) + 0.5);
+    const pulseFade = Math.min(1, pulseRadius - dPulse + 0.5);
     r = Math.round(r * (1 - pulseFade) + 255 * pulseFade);
     g = Math.round(g * (1 - pulseFade) + 255 * pulseFade);
     b = Math.round(b * (1 - pulseFade) + 255 * pulseFade);
@@ -189,7 +207,9 @@ function sampleColor(x, y) {
   // 5. Beacon Dot at peak (256, 112)
   const dDot = sdCircle(x, y, 256, 112, 7);
   if (dDot <= 0) {
-    r = 0; g = 240; b = 255;
+    r = 0;
+    g = 240;
+    b = 255;
   }
 
   // Anti-alias container outer border
@@ -208,7 +228,10 @@ function renderIcon(size) {
 
   for (let py = 0; py < size; py++) {
     for (let px = 0; px < size; px++) {
-      let sumR = 0, sumG = 0, sumB = 0, sumA = 0;
+      let sumR = 0,
+        sumG = 0,
+        sumB = 0,
+        sumA = 0;
       for (let sy = 0; sy < ss; sy++) {
         for (let sx = 0; sx < ss; sx++) {
           const sampleX = (px + (sx + 0.5) / ss) * scale;
@@ -222,9 +245,12 @@ function renderIcon(size) {
       }
       const totalSamples = ss * ss;
       const finalA = Math.round(sumA / totalSamples);
-      const finalR = finalA > 0 ? Math.min(255, Math.round((sumR / totalSamples) * (255 / finalA))) : 0;
-      const finalG = finalA > 0 ? Math.min(255, Math.round((sumG / totalSamples) * (255 / finalA))) : 0;
-      const finalB = finalA > 0 ? Math.min(255, Math.round((sumB / totalSamples) * (255 / finalA))) : 0;
+      const finalR =
+        finalA > 0 ? Math.min(255, Math.round((sumR / totalSamples) * (255 / finalA))) : 0;
+      const finalG =
+        finalA > 0 ? Math.min(255, Math.round((sumG / totalSamples) * (255 / finalA))) : 0;
+      const finalB =
+        finalA > 0 ? Math.min(255, Math.round((sumB / totalSamples) * (255 / finalA))) : 0;
 
       const idx = (py * size + px) * 4;
       buf[idx] = finalR;
@@ -340,7 +366,9 @@ function encodeICO(icoSizes, buffers) {
 
 const ico = encodeICO([16, 32, 48], pngBuffers);
 fs.writeFileSync("public/favicon.ico", ico);
-console.log(`✓ Wrote public/favicon.ico (${ico.length} bytes, multi-resolution 16x16, 32x32, 48x48)`);
+console.log(
+  `✓ Wrote public/favicon.ico (${ico.length} bytes, multi-resolution 16x16, 32x32, 48x48)`,
+);
 
 // ==========================================
 // 4. WEB MANIFEST

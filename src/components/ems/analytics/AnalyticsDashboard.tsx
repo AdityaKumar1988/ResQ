@@ -76,8 +76,7 @@ function buildTrend(range: Range, incidents: Incident[]) {
     const total = p1 + p2 + p3 + p4;
     const avgResp = Math.round(360 + noise(seedBase + 4) * 240);
     const sla = Math.max(72, Math.min(99, Math.round(88 + noise(seedBase + 5) * 12)));
-    const label =
-      unit === "h" ? `${idx}h` : unit === "w" ? `W${n - idx}` : `D${n - idx}`;
+    const label = unit === "h" ? `${idx}h` : unit === "w" ? `W${n - idx}` : `D${n - idx}`;
     // For the very last bucket, blend in the real counts to feel "live".
     const bump = i === n - 1 ? Math.min(6, Math.round(totalReal / 3)) : 0;
     return {
@@ -109,9 +108,7 @@ export function AnalyticsDashboard() {
 
   const totals = useMemo(() => {
     const total = trend.reduce((s, d) => s + d.total, 0);
-    const avgResp = Math.round(
-      trend.reduce((s, d) => s + d.avgResp, 0) / trend.length,
-    );
+    const avgResp = Math.round(trend.reduce((s, d) => s + d.avgResp, 0) / trend.length);
     const sla = Math.round(trend.reduce((s, d) => s + d.sla, 0) / trend.length);
     const active = incidents.filter(
       (i) => i.status !== "completed" && i.status !== "cancelled",
@@ -137,17 +134,20 @@ export function AnalyticsDashboard() {
 
   const emergencyMix = useMemo(() => {
     const counts = new Map<string, number>();
-    incidents.forEach((i) =>
-      counts.set(i.type, (counts.get(i.type) ?? 0) + 1),
-    );
+    incidents.forEach((i) => counts.set(i.type, (counts.get(i.type) ?? 0) + 1));
     // Add synthetic history so the bar chart is populated for demo weight.
     const boosters: Record<string, number> = {
-      cardiac: 42, trauma: 58, stroke: 31, respiratory: 28,
-      obstetric: 14, pediatric: 19, psychiatric: 22, burn: 9, other: 11,
+      cardiac: 42,
+      trauma: 58,
+      stroke: 31,
+      respiratory: 28,
+      obstetric: 14,
+      pediatric: 19,
+      psychiatric: 22,
+      burn: 9,
+      other: 11,
     };
-    Object.entries(boosters).forEach(([k, v]) =>
-      counts.set(k, (counts.get(k) ?? 0) + v),
-    );
+    Object.entries(boosters).forEach(([k, v]) => counts.set(k, (counts.get(k) ?? 0) + v));
     return Array.from(counts.entries())
       .map(([type, count]) => ({
         type,
@@ -159,21 +159,18 @@ export function AnalyticsDashboard() {
 
   const hospitalLoad = useMemo(
     () =>
-      hospitals.map((h) => {
-        const util = h.beds > 0 ? Math.round(((h.beds - h.bedsAvailable) / h.beds) * 100) : 0;
-        return {
-          name: h.name.replace(/ Medical Center| Trauma/, ""),
-          util,
-          available: h.bedsAvailable,
-          beds: h.beds,
-          fill:
-            util >= 92
-              ? "var(--destructive)"
-              : util >= 80
-                ? "var(--p2)"
-                : "var(--primary)",
-        };
-      }).sort((a, b) => b.util - a.util),
+      hospitals
+        .map((h) => {
+          const util = h.beds > 0 ? Math.round(((h.beds - h.bedsAvailable) / h.beds) * 100) : 0;
+          return {
+            name: h.name.replace(/ Medical Center| Trauma/, ""),
+            util,
+            available: h.bedsAvailable,
+            beds: h.beds,
+            fill: util >= 92 ? "var(--destructive)" : util >= 80 ? "var(--p2)" : "var(--primary)",
+          };
+        })
+        .sort((a, b) => b.util - a.util),
     [hospitals],
   );
 
@@ -295,20 +292,44 @@ export function AnalyticsDashboard() {
 
       {/* Row 1: Trend + Priority mix */}
       <div className="grid grid-cols-1 gap-3 px-6 xl:grid-cols-3">
-        <Card className="xl:col-span-2" title="Incident volume by priority" subtitle="Stacked P1–P4 over window">
+        <Card
+          className="xl:col-span-2"
+          title="Incident volume by priority"
+          subtitle="Stacked P1–P4 over window"
+        >
           <ResponsiveContainer width="100%" height={260}>
             <AreaChart data={trend} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
               <defs>
                 {(["P1", "P2", "P3", "P4"] as Priority[]).map((p) => (
                   <linearGradient key={p} id={`grad-${p}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={`var(--${PRIORITY_META[p].token})`} stopOpacity={0.55} />
-                    <stop offset="100%" stopColor={`var(--${PRIORITY_META[p].token})`} stopOpacity={0.05} />
+                    <stop
+                      offset="0%"
+                      stopColor={`var(--${PRIORITY_META[p].token})`}
+                      stopOpacity={0.55}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor={`var(--${PRIORITY_META[p].token})`}
+                      stopOpacity={0.05}
+                    />
                   </linearGradient>
                 ))}
               </defs>
               <CartesianGrid stroke="var(--border)" strokeDasharray="2 4" vertical={false} />
-              <XAxis dataKey="label" stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} />
-              <YAxis stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} width={30} />
+              <XAxis
+                dataKey="label"
+                stroke="var(--muted-foreground)"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                stroke="var(--muted-foreground)"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                width={30}
+              />
               <Tooltip content={<ChartTip />} />
               <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
               {(["P4", "P3", "P2", "P1"] as Priority[]).map((p) => (
@@ -356,13 +377,51 @@ export function AnalyticsDashboard() {
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={trend} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
               <CartesianGrid stroke="var(--border)" strokeDasharray="2 4" vertical={false} />
-              <XAxis dataKey="label" stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} />
-              <YAxis yAxisId="l" stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} width={30} />
-              <YAxis yAxisId="r" orientation="right" stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} width={30} domain={[60, 100]} />
+              <XAxis
+                dataKey="label"
+                stroke="var(--muted-foreground)"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                yAxisId="l"
+                stroke="var(--muted-foreground)"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                width={30}
+              />
+              <YAxis
+                yAxisId="r"
+                orientation="right"
+                stroke="var(--muted-foreground)"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                width={30}
+                domain={[60, 100]}
+              />
               <Tooltip content={<ChartTip />} />
               <Legend wrapperStyle={{ fontSize: 11 }} iconType="circle" />
-              <Line yAxisId="l" type="monotone" dataKey="avgResp" name="Avg response (s)" stroke="var(--status-enroute)" strokeWidth={2} dot={false} />
-              <Line yAxisId="r" type="monotone" dataKey="sla" name="SLA %" stroke="var(--status-available)" strokeWidth={2} dot={false} />
+              <Line
+                yAxisId="l"
+                type="monotone"
+                dataKey="avgResp"
+                name="Avg response (s)"
+                stroke="var(--status-enroute)"
+                strokeWidth={2}
+                dot={false}
+              />
+              <Line
+                yAxisId="r"
+                type="monotone"
+                dataKey="sla"
+                name="SLA %"
+                stroke="var(--status-available)"
+                strokeWidth={2}
+                dot={false}
+              />
             </LineChart>
           </ResponsiveContainer>
         </Card>
@@ -395,20 +454,30 @@ export function AnalyticsDashboard() {
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={emergencyMix} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
               <CartesianGrid stroke="var(--border)" strokeDasharray="2 4" vertical={false} />
-              <XAxis dataKey="label" stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} interval={0} angle={-18} height={50} textAnchor="end" />
-              <YAxis stroke="var(--muted-foreground)" fontSize={10} tickLine={false} axisLine={false} width={30} />
+              <XAxis
+                dataKey="label"
+                stroke="var(--muted-foreground)"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                interval={0}
+                angle={-18}
+                height={50}
+                textAnchor="end"
+              />
+              <YAxis
+                stroke="var(--muted-foreground)"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                width={30}
+              />
               <Tooltip content={<ChartTip />} />
               <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                 {emergencyMix.map((_, i) => (
                   <Cell
                     key={i}
-                    fill={
-                      i === 0
-                        ? "var(--p1)"
-                        : i === 1
-                          ? "var(--p2)"
-                          : "var(--primary)"
-                    }
+                    fill={i === 0 ? "var(--p1)" : i === 1 ? "var(--p2)" : "var(--primary)"}
                   />
                 ))}
               </Bar>
@@ -460,11 +529,7 @@ export function AnalyticsDashboard() {
           </div>
         </Card>
 
-        <Card
-          className="xl:col-span-2"
-          title="Demand heatmap"
-          subtitle="Incidents by day × hour"
-        >
+        <Card className="xl:col-span-2" title="Demand heatmap" subtitle="Incidents by day × hour">
           <div className="overflow-x-auto">
             <div className="min-w-[520px]">
               <div className="mb-1 grid grid-cols-[42px_repeat(24,minmax(0,1fr))] gap-[3px] pl-[2px] text-[9px] font-mono text-muted-foreground">
@@ -500,7 +565,12 @@ export function AnalyticsDashboard() {
                 <span className="text-foreground">Fri 18:00–22:00</span>
                 <span className="ml-auto flex items-center gap-1">
                   Low
-                  <span className="h-2 w-16 rounded-sm" style={{ background: "linear-gradient(90deg, var(--surface-2), var(--primary))" }} />
+                  <span
+                    className="h-2 w-16 rounded-sm"
+                    style={{
+                      background: "linear-gradient(90deg, var(--surface-2), var(--primary))",
+                    }}
+                  />
                   High
                 </span>
               </div>
@@ -577,9 +647,7 @@ function KpiCard({
         <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
           <Icon className="h-3 w-3" /> {label}
         </div>
-        <div className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight">
-          {value}
-        </div>
+        <div className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight">{value}</div>
         <div className="mt-1 flex items-center gap-1.5 text-[11px]">
           {!flat && (
             <span
@@ -615,7 +683,12 @@ function LeaderRow({ rank, driver }: { rank: number; driver: Driver & { score: n
           : "bg-surface-3 text-muted-foreground";
   return (
     <div className="flex items-center gap-3 rounded-md border border-border bg-surface-2/40 p-2.5">
-      <div className={cn("flex h-8 w-8 items-center justify-center rounded-md font-mono text-xs font-semibold", medal)}>
+      <div
+        className={cn(
+          "flex h-8 w-8 items-center justify-center rounded-md font-mono text-xs font-semibold",
+          medal,
+        )}
+      >
         {rank === 1 ? <Award className="h-4 w-4" /> : `#${rank}`}
       </div>
       <div className="min-w-0 flex-1">
@@ -626,20 +699,43 @@ function LeaderRow({ rank, driver }: { rank: number; driver: Driver & { score: n
           </span>
         </div>
         <div className="mt-0.5 flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-          <span className="flex items-center gap-1"><Flame className="h-3 w-3" />{Number(driver.rating ?? 0).toFixed(1)}</span>
-          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{fmtDuration(driver.avgResponseSec)}</span>
+          <span className="flex items-center gap-1">
+            <Flame className="h-3 w-3" />
+            {Number(driver.rating ?? 0).toFixed(1)}
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            {fmtDuration(driver.avgResponseSec)}
+          </span>
           <span>{driver.missionsCompleted} runs</span>
         </div>
       </div>
       <div className="text-right">
-        <div className="font-mono text-sm font-semibold tabular-nums">{driver.score.toFixed(1)}</div>
-        <div className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">score</div>
+        <div className="font-mono text-sm font-semibold tabular-nums">
+          {driver.score.toFixed(1)}
+        </div>
+        <div className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground">
+          score
+        </div>
       </div>
     </div>
   );
 }
 
-function ChartTip({ active, payload, label }: { active?: boolean; payload?: Array<{ name?: string; value?: number | string; color?: string; payload?: Record<string, unknown> }>; label?: string | number }) {
+function ChartTip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{
+    name?: string;
+    value?: number | string;
+    color?: string;
+    payload?: Record<string, unknown>;
+  }>;
+  label?: string | number;
+}) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-md border border-border bg-popover px-3 py-2 text-xs shadow-elevated">

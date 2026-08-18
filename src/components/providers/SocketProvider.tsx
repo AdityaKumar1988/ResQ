@@ -85,31 +85,47 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         { queryKey: queryKeys.incidents.all() },
         (old: { incidents: Incident[] } | undefined) =>
           old
-            ? { incidents: old.incidents.map((i) => (i.id === incident.id ? { ...i, ...incident } : i)) }
+            ? {
+                incidents: old.incidents.map((i) =>
+                  i.id === incident.id ? { ...i, ...incident } : i,
+                ),
+              }
             : old,
       );
     }
 
     // ── Driver: Location ──────────────────────────────────────────────────────
-    function onDriverLocation(payload: { driverId: string; lat: number; lng: number; heading?: number; at: string }) {
+    function onDriverLocation(payload: {
+      driverId: string;
+      lat: number;
+      lng: number;
+      heading?: number;
+      at: string;
+    }) {
       const now = Date.now();
       const last = lastLocationUpdate.get(payload.driverId) ?? 0;
       if (now - last < LOCATION_THROTTLE_MS) return; // throttle
       lastLocationUpdate.set(payload.driverId, now);
 
-      logger.socket("driver:location", { driverId: payload.driverId, lat: payload.lat, lng: payload.lng });
-      queryClient.setQueryData(
-        queryKeys.drivers.all(),
-        (old: { drivers: Driver[] } | undefined) =>
-          old
-            ? {
-                drivers: old.drivers.map((d) =>
-                  d.id === payload.driverId
-                    ? { ...d, location: { lat: payload.lat, lng: payload.lng }, heading: payload.heading ?? d.heading }
-                    : d,
-                ),
-              }
-            : old,
+      logger.socket("driver:location", {
+        driverId: payload.driverId,
+        lat: payload.lat,
+        lng: payload.lng,
+      });
+      queryClient.setQueryData(queryKeys.drivers.all(), (old: { drivers: Driver[] } | undefined) =>
+        old
+          ? {
+              drivers: old.drivers.map((d) =>
+                d.id === payload.driverId
+                  ? {
+                      ...d,
+                      location: { lat: payload.lat, lng: payload.lng },
+                      heading: payload.heading ?? d.heading,
+                    }
+                  : d,
+              ),
+            }
+          : old,
       );
     }
 
@@ -125,27 +141,25 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         userName?: string;
         userPhone?: string;
       };
-      queryClient.setQueryData(
-        queryKeys.drivers.all(),
-        (old: { drivers: Driver[] } | undefined) =>
-          old
-            ? {
-                drivers: old.drivers.map((current) =>
-                  current.id === driver.id
-                    ? {
-                        ...current,
-                        ...driver,
-                        name: rawDriver.userName ?? current.name,
-                        phone: rawDriver.userPhone ?? current.phone,
-                        location: {
-                          lat: Number(rawDriver.locationLat ?? current.location.lat),
-                          lng: Number(rawDriver.locationLng ?? current.location.lng),
-                        },
-                      }
-                    : current,
-                ),
-              }
-            : old,
+      queryClient.setQueryData(queryKeys.drivers.all(), (old: { drivers: Driver[] } | undefined) =>
+        old
+          ? {
+              drivers: old.drivers.map((current) =>
+                current.id === driver.id
+                  ? {
+                      ...current,
+                      ...driver,
+                      name: rawDriver.userName ?? current.name,
+                      phone: rawDriver.userPhone ?? current.phone,
+                      location: {
+                        lat: Number(rawDriver.locationLat ?? current.location.lat),
+                        lng: Number(rawDriver.locationLng ?? current.location.lng),
+                      },
+                    }
+                  : current,
+              ),
+            }
+          : old,
       );
     }
 
@@ -172,9 +186,22 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(
         queryKeys.notifications.all(),
         (old: { notifications: Notification[] } | undefined) =>
-          old ? { notifications: [notification, ...old.notifications] } : old,
+          old
+            ? {
+                notifications: [
+                  notification,
+                  ...old.notifications.filter((n) => n.id !== notification.id),
+                ],
+              }
+            : { notifications: [notification] },
       );
       toast.info(notification.title, { description: notification.body });
+    }
+
+    function onRoleNotification(payload: { kind: string; title: string; body?: string }) {
+      if (!payload?.title) return;
+      toast.info(payload.title, { description: payload.body });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all() });
     }
 
     // ── Incident: New (assigned to this driver) ───────────────────────────────
@@ -197,6 +224,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     socket.on("driver:status", onDriverStatus);
     socket.on("fleet:updated", onFleetUpdated);
     socket.on("notification:created", onNotificationCreated);
+    socket.on("role:notification", onRoleNotification);
     socket.on("incident:new", onIncidentNew);
 
     // Cleanup
@@ -208,6 +236,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       socket.off("driver:status", onDriverStatus);
       socket.off("fleet:updated", onFleetUpdated);
       socket.off("notification:created", onNotificationCreated);
+      socket.off("role:notification", onRoleNotification);
       socket.off("incident:new", onIncidentNew);
     };
 

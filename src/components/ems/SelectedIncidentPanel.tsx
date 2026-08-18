@@ -1,14 +1,16 @@
 import { useState, useMemo } from "react";
 import { CheckCircle2, ChevronRight, Clock, Loader2, Phone, Radio, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  INCIDENT_STATUS_LABELS,
-  EMERGENCY_LABELS,
-  type IncidentStatus,
-} from "@/lib/ems/types";
+import { INCIDENT_STATUS_LABELS, EMERGENCY_LABELS, type IncidentStatus } from "@/lib/ems/types";
 import { formatDuration, formatRelative, haversineKm, etaMinutes } from "@/lib/ems/geo";
 import { priorityClasses } from "@/lib/ems/style";
-import { useIncidents, useUpdateIncidentStatus, INCIDENT_STATUS_FLOW, useAssignDriver, useDispatchRecommendations } from "@/hooks/dispatch/use-incidents";
+import {
+  useIncidents,
+  useUpdateIncidentStatus,
+  INCIDENT_STATUS_FLOW,
+  useAssignDriver,
+  useDispatchRecommendations,
+} from "@/hooks/dispatch/use-incidents";
 import { useDrivers } from "@/hooks/fleet/use-drivers";
 import { useVehicles } from "@/hooks/fleet/use-vehicles";
 
@@ -16,9 +18,7 @@ interface SelectedIncidentPanelProps {
   selectedId: string | null;
 }
 
-export function SelectedIncidentPanel({
-  selectedId,
-}: SelectedIncidentPanelProps)  {
+export function SelectedIncidentPanel({ selectedId }: SelectedIncidentPanelProps) {
   const { data: incidents = [] } = useIncidents();
   const { data: drivers = [] } = useDrivers();
   const { data: vehicles = [] } = useVehicles();
@@ -26,7 +26,7 @@ export function SelectedIncidentPanel({
   const assignDriver = useAssignDriver();
   const [manualDriverId, setManualDriverId] = useState<string>("");
 
-  const incident = selectedId ? incidents.find((item) => item.id === selectedId) ?? null : null;
+  const incident = selectedId ? (incidents.find((item) => item.id === selectedId) ?? null) : null;
 
   const { data: recommendations = [], isLoading: isLoadingRecs } = useDispatchRecommendations(
     incident?.status === "reported" ? incident.id : null,
@@ -61,7 +61,12 @@ export function SelectedIncidentPanel({
 
   return (
     <div className="flex flex-wrap items-center gap-4 border-t border-border bg-surface/70 px-4 py-3 backdrop-blur">
-      <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded font-mono text-sm font-bold", cls.solid)}>
+      <div
+        className={cn(
+          "flex h-11 w-11 shrink-0 items-center justify-center rounded font-mono text-sm font-bold",
+          cls.solid,
+        )}
+      >
         {incident.priority}
       </div>
       <div className="min-w-0">
@@ -70,8 +75,14 @@ export function SelectedIncidentPanel({
           <span className="text-sm font-semibold">{EMERGENCY_LABELS[incident.type]}</span>
         </div>
         <div className="mt-0.5 flex items-center gap-3 text-[11px] text-muted-foreground">
-          <span className="flex items-center gap-1"><User className="h-3 w-3" />{incident.citizenName}</span>
-          <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{incident.citizenPhone}</span>
+          <span className="flex items-center gap-1">
+            <User className="h-3 w-3" />
+            {incident.citizenName}
+          </span>
+          <span className="flex items-center gap-1">
+            <Phone className="h-3 w-3" />
+            {incident.citizenPhone}
+          </span>
           <span>{incident.address}</span>
         </div>
       </div>
@@ -79,12 +90,16 @@ export function SelectedIncidentPanel({
       <div className="flex items-center gap-3 rounded-md border border-border bg-surface-2 px-3 py-1.5 text-[11px]">
         <div>
           <div className="text-[9px] uppercase text-muted-foreground">Reported</div>
-          <div className="font-mono" suppressHydrationWarning>{formatRelative(incident.reportedAt)}</div>
+          <div className="font-mono" suppressHydrationWarning>
+            {formatRelative(incident.reportedAt)}
+          </div>
         </div>
         <div className="h-6 w-px bg-border" />
         <div>
           <div className="text-[9px] uppercase text-muted-foreground">Mission</div>
-          <div className="font-mono" suppressHydrationWarning>{formatDuration(missionSec)}</div>
+          <div className="font-mono" suppressHydrationWarning>
+            {formatDuration(missionSec)}
+          </div>
         </div>
         {eta != null && (
           <>
@@ -125,9 +140,19 @@ export function SelectedIncidentPanel({
                 if (!recommendedDriver) return null;
 
                 return (
-                  <div key={rec.driverId} className="flex items-center justify-between rounded border border-border/50 bg-surface p-2">
+                  <div
+                    key={rec.driverId}
+                    className="flex items-center justify-between rounded border border-border/50 bg-surface p-2"
+                  >
                     <div className="flex items-center gap-2">
-                      <div className={cn("flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold", i === 0 ? "bg-primary/20 text-primary" : "bg-surface-3 text-muted-foreground")}>
+                      <div
+                        className={cn(
+                          "flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold",
+                          i === 0
+                            ? "bg-primary/20 text-primary"
+                            : "bg-surface-3 text-muted-foreground",
+                        )}
+                      >
                         #{i + 1}
                       </div>
                       <div>
@@ -138,18 +163,26 @@ export function SelectedIncidentPanel({
                       </div>
                     </div>
                     <button
-                      onClick={() => assignDriver.mutate({ incidentId: incident.id, driverId: rec.driverId })}
+                      onClick={() =>
+                        assignDriver.mutate({ incidentId: incident.id, driverId: rec.driverId })
+                      }
                       disabled={assignDriver.isPending}
                       className="flex h-7 items-center gap-1 rounded bg-primary px-3 text-[10px] font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                     >
-                      {assignDriver.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Assign"}
+                      {assignDriver.isPending ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        "Assign"
+                      )}
                     </button>
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="text-xs text-muted-foreground">No automatic recommendations available.</div>
+            <div className="text-xs text-muted-foreground">
+              No automatic recommendations available.
+            </div>
           )}
 
           {/* Manual Driver Selection Fallback */}
@@ -158,7 +191,9 @@ export function SelectedIncidentPanel({
               Manual Ambulance Selection
             </div>
             {availableDrivers.length === 0 ? (
-              <div className="text-xs text-muted-foreground">No eligible available drivers in fleet.</div>
+              <div className="text-xs text-muted-foreground">
+                No eligible available drivers in fleet.
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <select
@@ -183,7 +218,11 @@ export function SelectedIncidentPanel({
                   disabled={!manualDriverId || assignDriver.isPending}
                   className="flex h-7 items-center gap-1 rounded bg-primary px-3 text-[10px] font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {assignDriver.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : "Confirm Assignment"}
+                  {assignDriver.isPending ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    "Confirm Assignment"
+                  )}
                 </button>
               </div>
             )}

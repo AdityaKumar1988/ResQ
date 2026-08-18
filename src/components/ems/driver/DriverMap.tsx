@@ -77,11 +77,14 @@ export default function DriverMap({ driver, incident, hospital }: Props) {
       .addTo(layer);
 
     const transporting = incident?.status === "patient_loaded";
-    const target = transporting && hospital ? hospital.location : incident?.location ?? null;
+    const target = transporting && hospital ? hospital.location : (incident?.location ?? null);
 
     if (incident) {
       L.marker([incident.location.lat, incident.location.lng], { icon: patientIcon() })
-        .bindTooltip(`${incident.code} · ${incident.citizenName}`, { direction: "top", offset: [0, -12] })
+        .bindTooltip(`${incident.code} · ${incident.citizenName}`, {
+          direction: "top",
+          offset: [0, -12],
+        })
         .addTo(layer);
     }
     if (hospital) {

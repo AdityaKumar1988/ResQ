@@ -65,8 +65,7 @@ function Landing() {
               Live · v1.0
             </div>
             <h1 className="mt-5 text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
-              Emergency response,{" "}
-              <span className="text-gradient">under a single console.</span>
+              Emergency response, <span className="text-gradient">under a single console.</span>
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
               Smart EMS unifies 911 intake, ambulance dispatch, driver workflow, hospital handoff,
@@ -198,9 +197,21 @@ function Landing() {
         </section>
 
         <section className="mt-24 grid gap-4 md:grid-cols-3">
-          <Feature icon={Siren} title="Smart recommendation engine" desc="Ranks top-3 ambulances by distance, availability, driver performance, SLA history, and workload — dispatcher can override." />
-          <Feature icon={BarChart3} title="Live SLA analytics" desc="Response time, mission duration, fleet utilization, heatmaps, and driver leaderboards — filterable by day, week, month, year." />
-          <Feature icon={Activity} title="Realtime everywhere" desc="Socket.IO powered fleet tracking, incident escalations, and hospital handoffs across every screen." />
+          <Feature
+            icon={Siren}
+            title="Smart recommendation engine"
+            desc="Ranks top-3 ambulances by distance, availability, driver performance, SLA history, and workload — dispatcher can override."
+          />
+          <Feature
+            icon={BarChart3}
+            title="Live SLA analytics"
+            desc="Response time, mission duration, fleet utilization, heatmaps, and driver leaderboards — filterable by day, week, month, year."
+          />
+          <Feature
+            icon={Activity}
+            title="Realtime everywhere"
+            desc="Socket.IO powered fleet tracking, incident escalations, and hospital handoffs across every screen."
+          />
         </section>
       </main>
     </div>

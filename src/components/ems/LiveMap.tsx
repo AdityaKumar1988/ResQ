@@ -76,7 +76,13 @@ function hospitalIcon() {
   });
 }
 
-export default function LiveMap({ selectedId, onSelect }: { selectedId: string | null; onSelect: (id: string) => void }) {
+export default function LiveMap({
+  selectedId,
+  onSelect,
+}: {
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LType.Map | null>(null);
   const incidentLayerRef = useRef<LType.LayerGroup | null>(null);
@@ -142,7 +148,7 @@ export default function LiveMap({ selectedId, onSelect }: { selectedId: string |
         .on("click", () => onSelect(i.id));
       marker.addTo(incidentLayerRef.current!);
     });
-  }, [incidents, selectedId]);
+  }, [incidents, selectedId, onSelect]);
 
   // Update drivers
   useEffect(() => {

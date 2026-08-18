@@ -8,7 +8,10 @@ export const Route = createFileRoute("/fleet")({
   component: () => (
     <ProtectedRoute allowedRoles={["dispatcher", "admin"]}>
       <AppShell>
-        <ComingSoon title="Fleet management" note="Vehicle CRUD, driver-vehicle assignments, and maintenance windows — coming next." />
+        <ComingSoon
+          title="Fleet management"
+          note="Vehicle CRUD, driver-vehicle assignments, and maintenance windows — coming next."
+        />
       </AppShell>
     </ProtectedRoute>
   ),

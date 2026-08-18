@@ -38,7 +38,13 @@ export function recommendDrivers(
 
     const score = distanceScore + availabilityScore + ratingScore + responseScore + workloadScore;
 
-    return { driverId: d.id, score: Number(score.toFixed(1)), distanceKm, etaMinutes: eta, reasons };
+    return {
+      driverId: d.id,
+      score: Number(score.toFixed(1)),
+      distanceKm,
+      etaMinutes: eta,
+      reasons,
+    };
   });
 
   return scored.sort((a, b) => b.score - a.score).slice(0, topN);
