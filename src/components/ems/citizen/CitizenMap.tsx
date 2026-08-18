@@ -76,7 +76,10 @@ export default function CitizenMap({ incident, driver, hospital, citizenLocation
 
     L.marker([citizenLocation.lat, citizenLocation.lng], { icon: citizenIcon() }).addTo(layer);
 
-    if (driver) {
+    const isLiveMission =
+      incident && incident.status !== "completed" && incident.status !== "cancelled";
+
+    if (driver && isLiveMission) {
       L.marker([driver.location.lat, driver.location.lng], {
         icon: ambulanceIcon(driver.heading),
       })
@@ -103,14 +106,19 @@ export default function CitizenMap({ incident, driver, hospital, citizenLocation
 
     // Fit map to relevant markers
     const points: [number, number][] = [[citizenLocation.lat, citizenLocation.lng]];
-    if (driver) points.push([driver.location.lat, driver.location.lng]);
-    if (hospital && incident?.status === "patient_loaded") {
+    if (driver && isLiveMission) points.push([driver.location.lat, driver.location.lng]);
+    if (
+      hospital &&
+      (incident?.status === "patient_loaded" ||
+        incident?.status === "at_hospital" ||
+        incident?.status === "completed")
+    ) {
       points.push([hospital.location.lat, hospital.location.lng]);
     }
     if (points.length > 1) {
       map.fitBounds(points, { padding: [40, 40], maxZoom: 15, animate: true });
     }
-  }, [driver, hospital, incident?.status, citizenLocation.lat, citizenLocation.lng]);
+  }, [driver, hospital, incident, citizenLocation.lat, citizenLocation.lng]);
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-lg border border-border bg-surface panel">

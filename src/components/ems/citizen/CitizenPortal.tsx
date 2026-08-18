@@ -534,7 +534,11 @@ function TrackPanel({
     );
   }
 
-  const distanceKm = driver ? haversineKm(driver.location, incident.location) : null;
+  const isCompleted = incident.status === "completed";
+  const isCancelled = incident.status === "cancelled";
+  const isLive = !isCompleted && !isCancelled;
+
+  const distanceKm = driver && isLive ? haversineKm(driver.location, incident.location) : null;
   const eta = distanceKm != null ? etaMinutes(distanceKm) : null;
   const arrived = distanceKm != null && distanceKm < 0.08;
   const cls = priorityClasses(incident.priority);
@@ -560,8 +564,16 @@ function TrackPanel({
           </div>
           <div className="mt-1 text-sm font-semibold">{EMERGENCY_LABELS[incident.type]}</div>
           <div className="mt-2 flex items-center gap-2 rounded-md bg-surface-2 px-3 py-2">
-            <span className={cn("h-2 w-2 animate-pulse rounded-full", cls.solid)} />
-            <span className="text-xs font-medium">{INCIDENT_STATUS_LABELS[incident.status]}</span>
+            <span
+              className={cn(
+                "h-2 w-2 rounded-full",
+                isLive && "animate-pulse",
+                isCompleted ? "bg-status-available" : cls.solid,
+              )}
+            />
+            <span className="text-xs font-medium">
+              {isCompleted ? "Mission Completed" : INCIDENT_STATUS_LABELS[incident.status]}
+            </span>
           </div>
         </div>
 
@@ -575,27 +587,35 @@ function TrackPanel({
                 <div className="truncate text-sm font-semibold">{driver.callSign}</div>
                 <div className="truncate text-[11px] text-muted-foreground">{driver.name}</div>
               </div>
-              <a
-                href={`tel:${(driver.phone ?? "").replace(/\D/g, "")}`}
-                className="rounded-md border border-border bg-surface-2 p-2 hover:bg-surface-3"
-                aria-label="Call driver"
-              >
-                <Phone className="h-3.5 w-3.5" />
-              </a>
+              {isLive && (
+                <a
+                  href={`tel:${(driver.phone ?? "").replace(/\D/g, "")}`}
+                  className="rounded-md border border-border bg-surface-2 p-2 hover:bg-surface-3"
+                  aria-label="Call driver"
+                >
+                  <Phone className="h-3.5 w-3.5" />
+                </a>
+              )}
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <Stat
-                label="ETA"
-                value={arrived ? "Arriving" : eta != null ? `${eta} min` : "—"}
-                accent
-              />
-              <Stat
-                label="Distance"
-                value={distanceKm != null ? `${distanceKm.toFixed(1)} km` : "—"}
-              />
-              <Stat label="Rating" value={Number(driver.rating ?? 0).toFixed(1)} />
-              <Stat label="Missions" value={driver.missionsCompleted} />
-            </div>
+            {isLive ? (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Stat
+                  label="ETA"
+                  value={arrived ? "Arriving" : eta != null ? `${eta} min` : "—"}
+                  accent
+                />
+                <Stat
+                  label="Distance"
+                  value={distanceKm != null ? `${distanceKm.toFixed(1)} km` : "—"}
+                />
+                <Stat label="Rating" value={Number(driver.rating ?? 0).toFixed(1)} />
+                <Stat label="Missions" value={driver.missionsCompleted} />
+              </div>
+            ) : isCompleted ? (
+              <div className="mt-3 rounded-md border border-status-available/30 bg-status-available/10 p-2.5 text-center text-xs font-semibold text-status-available">
+                ✓ Handover Complete · Patient Transferred
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="rounded-lg border border-border bg-surface panel p-4 text-center text-xs text-muted-foreground">

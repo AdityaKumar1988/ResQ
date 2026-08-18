@@ -20,9 +20,7 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <div className="text-xs font-mono tracking-[0.2em] text-muted-foreground">
-          SMART&nbsp;EMS · 404
-        </div>
+        <div className="text-xs font-mono tracking-[0.2em] text-muted-foreground">ResQ · 404</div>
         <h1 className="mt-3 text-6xl font-bold tracking-tight text-gradient">Off grid</h1>
         <p className="mt-3 text-sm text-muted-foreground">
           This route isn't in our operational map. It may have been retired or the URL is wrong.
@@ -81,14 +79,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Smart EMS — Emergency Operations Platform" },
+      { title: "ResQ — Emergency Operations Platform" },
       {
         name: "description",
         content:
           "Enterprise emergency medical dispatch platform. Real-time incident management, fleet tracking, and analytics for ambulance services and emergency response centers.",
       },
       { name: "theme-color", content: "#0f1420" },
-      { property: "og:title", content: "Smart EMS — Emergency Operations Platform" },
+      { property: "og:title", content: "ResQ — Emergency Operations Platform" },
       {
         property: "og:description",
         content:

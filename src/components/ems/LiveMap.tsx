@@ -172,9 +172,14 @@ export default function LiveMap({
     if (!routeLayerRef.current || !mapRef.current) return;
     routeLayerRef.current.clearLayers();
     const inc = incidents.find((i) => i.id === selectedId);
-    if (!inc) return;
+    if (!inc || inc.status === "completed" || inc.status === "cancelled") return;
     const driver = inc.driverId ? drivers.find((d) => d.id === inc.driverId) : null;
-    if (driver) {
+    if (
+      driver &&
+      driver.status !== "available" &&
+      driver.status !== "offline" &&
+      driver.status !== "maintenance"
+    ) {
       L.polyline(
         [
           [driver.location.lat, driver.location.lng],

@@ -11,6 +11,6 @@ export default defineConfig({
     setupFiles: ["./src/__tests__/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     css: false,
-    pool: "threads",
+    pool: "forks",
   },
 });

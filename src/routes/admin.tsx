@@ -6,16 +6,16 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin console · Smart EMS" },
+      { title: "Admin Console · ResQ" },
       {
         name: "description",
         content:
-          "Administration console — manage staff and roles, fleet, hospitals, service health and audit logs for the Smart EMS platform.",
+          "Administration console — manage staff and roles, fleet, hospitals, service health and audit logs for the ResQ platform.",
       },
-      { property: "og:title", content: "Admin console · Smart EMS" },
+      { property: "og:title", content: "Admin Console · ResQ" },
       {
         property: "og:description",
-        content: "Governance and access control for the Smart EMS platform.",
+        content: "Governance and access control for the ResQ platform.",
       },
     ],
   }),

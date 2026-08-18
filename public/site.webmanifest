@@ -1,6 +1,6 @@
 {
-  "name": "Smart EMS — Emergency Operations Platform",
-  "short_name": "Smart EMS",
+  "name": "ResQ — Emergency Operations Platform",
+  "short_name": "ResQ",
   "description": "Enterprise emergency medical dispatch and incident response platform.",
   "start_url": "/",
   "display": "standalone",

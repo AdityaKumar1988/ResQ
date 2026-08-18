@@ -6,11 +6,11 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 export const Route = createFileRoute("/analytics")({
   head: () => ({
     meta: [
-      { title: "Analytics · Smart EMS" },
+      { title: "Analytics · ResQ" },
       {
         name: "description",
         content:
-          "Response-time trends, SLA compliance, incident heatmaps, and driver performance leaderboards for emergency operations.",
+          "Response-time trends, SLA compliance, incident heatmaps, and driver performance leaderboards for ResQ emergency operations.",
       },
     ],
   }),

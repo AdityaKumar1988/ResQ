@@ -10,6 +10,8 @@ export function useHospitals() {
     select: (data) =>
       data.hospitals.map((h) => ({
         ...h,
+        beds: Number(h.beds ?? 0),
+        bedsAvailable: Number(h.bedsAvailable ?? 0),
         location: { lat: Number(h.lat), lng: Number(h.lng) },
       })),
   });

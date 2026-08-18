@@ -233,7 +233,7 @@ function OverviewTab({
     { name: "Socket.IO", status: "up", latency: "12ms" },
     { name: "Auth (JWT)", status: "up", latency: "3ms" },
     { name: "Dispatch Engine", status: "up", latency: "94ms" },
-    { name: "Notifications", status: "degraded", latency: "310ms" },
+    { name: "Notifications", status: "up", latency: "14ms" },
   ] as const;
 
   return (
@@ -322,11 +322,12 @@ function OverviewTab({
                 className="flex items-center gap-2 rounded-md border border-border bg-surface-2 px-2 py-1.5"
               >
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-[10px] font-semibold text-primary">
-                  {(d.name ?? "Unknown")
-                    .split(" ")
-                    .map((p) => p[0])
+                  {(d.name || "Driver")
+                    .trim()
+                    .split(/\s+/)
+                    .map((p) => p.charAt(0))
                     .slice(0, 2)
-                    .join("")}
+                    .join("") || "D"}
                 </div>
                 <div className="min-w-0 flex-1 leading-tight">
                   <div className="truncate text-xs font-medium">{d.name ?? "Unknown Driver"}</div>
@@ -514,11 +515,12 @@ function UsersTab({ staff }: { staff: StaffUser[] }) {
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
                       <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-[10px] font-semibold text-primary">
-                        {u.name
-                          .split(" ")
-                          .map((p) => p[0])
+                        {(u.name || "User")
+                          .trim()
+                          .split(/\s+/)
+                          .map((p) => p.charAt(0))
                           .slice(0, 2)
-                          .join("")}
+                          .join("") || "U"}
                       </div>
                       <div className="leading-tight">
                         <div className="font-medium">{u.name}</div>
@@ -847,8 +849,10 @@ function HospitalsTab({
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {hospitals.map((h) => {
-            const util = h.beds > 0 ? 1 - h.bedsAvailable / h.beds : 0;
-            const pct = Math.round(util * 100);
+            const beds = Number(h.beds ?? 0);
+            const bedsAvailable = Number(h.bedsAvailable ?? 0);
+            const occupied = Math.max(0, beds - bedsAvailable);
+            const pct = beds > 0 ? Math.round((occupied / beds) * 100) : 0;
             const tone =
               pct > 90 ? "destructive" : pct > 75 ? "status-enroute" : "status-available";
             return (
@@ -860,7 +864,8 @@ function HospitalsTab({
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{h.name}</div>
                     <div className="font-mono text-[10px] text-muted-foreground">
-                      {h.location.lat.toFixed(4)}, {h.location.lng.toFixed(4)}
+                      {Number(h.location?.lat ?? 0).toFixed(4)},{" "}
+                      {Number(h.location?.lng ?? 0).toFixed(4)}
                     </div>
                   </div>
                   <ShieldCheck className="h-4 w-4 text-status-available" />
@@ -868,7 +873,7 @@ function HospitalsTab({
                 <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
                   <span>Bed utilization</span>
                   <span className="font-mono tabular-nums">
-                    {h.beds - h.bedsAvailable} / {h.beds}
+                    {occupied} / {beds}
                   </span>
                 </div>
                 <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
@@ -878,8 +883,8 @@ function HospitalsTab({
                   />
                 </div>
                 <div className="mt-2 grid grid-cols-3 gap-1.5 text-center">
-                  <MiniField label="Capacity" value={String(h.beds)} />
-                  <MiniField label="Available" value={String(h.bedsAvailable)} />
+                  <MiniField label="Capacity" value={String(beds)} />
+                  <MiniField label="Available" value={String(bedsAvailable)} />
                   <MiniField label="Load" value={`${pct}%`} />
                 </div>
               </div>

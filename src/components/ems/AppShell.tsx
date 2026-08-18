@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   Activity,
   BarChart3,
@@ -7,7 +7,6 @@ import {
   LifeBuoy,
   LogOut,
   Radio,
-  Search,
   Shield,
   Siren,
   Truck,
@@ -34,7 +33,7 @@ const NAV: NavItem[] = [
     to: "/dispatch",
     label: "Command Center",
     icon: LayoutDashboard,
-    allowedRoles: ["dispatcher", "admin"],
+    allowedRoles: ["dispatcher"],
     badge: (c) => c.active || null,
   },
   { to: "/incidents", label: "Incidents", icon: Siren, allowedRoles: ["dispatcher", "admin"] },
@@ -46,19 +45,25 @@ const NAV: NavItem[] = [
     badge: (c) => `${c.available}`,
   },
   { to: "/analytics", label: "Analytics", icon: BarChart3, allowedRoles: ["dispatcher", "admin"] },
-  { to: "/citizen", label: "Citizen Portal", icon: LifeBuoy, allowedRoles: ["citizen", "admin"] },
-  { to: "/driver", label: "Driver App", icon: Radio, allowedRoles: ["driver", "admin"] },
-  { to: "/admin", label: "Admin", icon: Shield, allowedRoles: ["admin"] },
+  { to: "/citizen", label: "Citizen Portal", icon: LifeBuoy, allowedRoles: ["citizen"] },
+  { to: "/driver", label: "Driver App", icon: Radio, allowedRoles: ["driver"] },
+  { to: "/admin", label: "Admin Console", icon: Shield, allowedRoles: ["admin"] },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
   const { data: incidents = [] } = useIncidents();
   const { data: drivers = [] } = useDrivers();
   const { data: notifData } = useNotifications();
   const { user, logout, can } = useAuth();
   const [now, setNow] = useState<Date | null>(null);
   const [notifOpen, setNotifOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate({ to: "/login", replace: true });
+  };
 
   useEffect(() => {
     setNow(new Date());
@@ -85,7 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Siren className="h-4 w-4 text-primary-foreground" strokeWidth={2.5} />
           </div>
           <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold tracking-tight">Smart EMS</span>
+            <span className="text-sm font-semibold tracking-tight">ResQ</span>
             <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
               Ops Console
             </span>
@@ -129,7 +134,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             </div>
             <button
-              onClick={logout}
+              onClick={handleLogout}
               title="Sign out"
               className="rounded p-1 text-muted-foreground hover:text-destructive transition-colors"
             >
@@ -142,24 +147,16 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Main column */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top status bar */}
-        <header className="flex h-14 shrink-0 items-center gap-4 border-b border-border bg-surface/70 px-4 backdrop-blur">
+        <header className="relative z-40 flex h-14 shrink-0 items-center gap-4 border-b border-border bg-surface/70 px-4 backdrop-blur">
           <div className="flex items-center gap-2 md:hidden">
             <Siren className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold">Smart EMS</span>
+            <span className="text-sm font-semibold">ResQ</span>
           </div>
 
           <div className="hidden flex-1 items-center gap-1 md:flex">
             <StatChip label="Active" value={activeIncidents.length} accent="primary" />
             <StatChip label="En route" value={enrouteUnits} accent="enroute" />
             <StatChip label="Available" value={availableUnits} accent="available" />
-          </div>
-
-          <div className="hidden max-w-md flex-1 items-center gap-2 rounded-md border border-border bg-surface-2 px-3 py-1.5 text-xs text-muted-foreground lg:flex">
-            <Search className="h-3.5 w-3.5" />
-            <span>Search incidents, drivers, vehicles…</span>
-            <kbd className="ml-auto rounded border border-border bg-surface-3 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-              ⌘K
-            </kbd>
           </div>
 
           <div className="ml-auto flex items-center gap-3">

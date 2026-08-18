@@ -3,6 +3,34 @@ import { driversApi } from "@/lib/api/drivers";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Driver } from "@/types/driver";
 
+function normalizeDriverClient(d: Driver): Driver {
+  if (!d) return d;
+  const raw = d as unknown as Record<string, unknown>;
+  const existingLoc = raw.location as { lat?: number | string; lng?: number | string } | undefined;
+  const name = String(raw.userName ?? raw.name ?? d.name ?? d.callSign ?? "Driver");
+  const phone = (raw.userPhone ?? raw.phone ?? d.phone) as string | undefined;
+  const ratingNum = Number(raw.rating ?? d.rating ?? 0);
+  const missionsCompletedNum = Number(raw.missionsCompleted ?? d.missionsCompleted ?? 0);
+  const missionsActiveNum = Number(raw.missionsActive ?? d.missionsActive ?? 0);
+  const avgResponseSecNum = Number(raw.avgResponseSec ?? d.avgResponseSec ?? 480);
+  const headingNum = Number(raw.heading ?? d.heading ?? 0);
+
+  return {
+    ...d,
+    name,
+    phone: phone ? String(phone) : undefined,
+    rating: Number.isFinite(ratingNum) ? ratingNum : 4.7,
+    missionsCompleted: Number.isFinite(missionsCompletedNum) ? missionsCompletedNum : 0,
+    missionsActive: Number.isFinite(missionsActiveNum) ? missionsActiveNum : 0,
+    avgResponseSec: Number.isFinite(avgResponseSecNum) ? avgResponseSecNum : 480,
+    heading: Number.isFinite(headingNum) ? headingNum : 0,
+    location: {
+      lat: Number(raw.locationLat ?? existingLoc?.lat ?? 0),
+      lng: Number(raw.locationLng ?? existingLoc?.lng ?? 0),
+    },
+  };
+}
+
 // ── All Drivers (dispatcher/admin) ────────────────────────────────────────────
 
 export function useDrivers() {
@@ -11,20 +39,7 @@ export function useDrivers() {
     queryFn: driversApi.list,
     staleTime: 30_000,
     refetchOnReconnect: true,
-    select: (data) =>
-      data.drivers.map((d) => {
-        const raw = d as unknown as Record<string, unknown>;
-        const existingLoc = raw.location as { lat?: number; lng?: number } | undefined;
-        return {
-          ...d,
-          // Backend may send location_lat/location_lng (normalized to locationLat/locationLng)
-          // or a nested location object — normalize to GeoPoint
-          location: {
-            lat: Number(raw.locationLat ?? existingLoc?.lat ?? 0),
-            lng: Number(raw.locationLng ?? existingLoc?.lng ?? 0),
-          },
-        };
-      }),
+    select: (data) => data.drivers.map(normalizeDriverClient),
   });
 }
 
@@ -35,7 +50,7 @@ export function useDriverMe() {
     queryKey: queryKeys.drivers.me(),
     queryFn: driversApi.me,
     staleTime: 30_000,
-    select: (data) => data.driver,
+    select: (data) => (data.driver ? normalizeDriverClient(data.driver) : null),
   });
 }
 
@@ -51,7 +66,7 @@ export function useUpdateDriverLocation() {
         old
           ? {
               drivers: old.drivers.map((d) =>
-                d.id === data.driver.id ? { ...d, ...data.driver } : d,
+                d.id === data.driver.id ? normalizeDriverClient({ ...d, ...data.driver }) : d,
               ),
             }
           : old,
@@ -71,7 +86,9 @@ export function useUpdateDriverStatus() {
         old
           ? {
               drivers: old.drivers.map((d) =>
-                d.id === data.driver.id ? { ...d, status: data.driver.status } : d,
+                d.id === data.driver.id
+                  ? normalizeDriverClient({ ...d, status: data.driver.status })
+                  : d,
               ),
             }
           : old,

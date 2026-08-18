@@ -6,13 +6,13 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 export const Route = createFileRoute("/citizen")({
   head: () => ({
     meta: [
-      { title: "Citizen Portal · Smart EMS" },
+      { title: "Citizen Portal · ResQ" },
       {
         name: "description",
         content:
           "Request an ambulance, track its live location and ETA in real time, and review your incident history.",
       },
-      { property: "og:title", content: "Citizen Portal · Smart EMS" },
+      { property: "og:title", content: "Citizen Portal · ResQ" },
       {
         property: "og:description",
         content: "One-tap emergency requests with live ambulance tracking.",
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/citizen")({
     ],
   }),
   component: () => (
-    <ProtectedRoute allowedRoles={["citizen", "admin"]}>
+    <ProtectedRoute allowedRoles={["citizen"]}>
       <AppShell>
         <CitizenPortal />
       </AppShell>

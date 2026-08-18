@@ -305,6 +305,19 @@ router.post(
       });
     }
 
+    // Scoped persistent + realtime notification for Dispatchers
+    await notifyRole({
+      role: "dispatcher",
+      kind: "incident_assigned",
+      title: `Ambulance ${assignment.callSign} Assigned`,
+      body: `Unit ${assignment.callSign} assigned to incident ${assignment.incident.code} (${assignment.incident.priority}).`,
+      data: {
+        incidentId: assignment.incident.id,
+        code: assignment.incident.code,
+        callSign: assignment.callSign,
+      },
+    });
+
     res.json({ incident: assignment.incident });
   }),
 );
@@ -472,14 +485,49 @@ router.patch(
       });
     }
 
-    // Dispatcher notification when driver arrives at incident
-    if (status === "arrived" && update.driverCallSign) {
+    // Dispatcher notifications on all mission lifecycle transitions
+    const dispatcherCallSign = update.driverCallSign || "Ambulance";
+    let dispatcherTitle = null;
+    let dispatcherBody = null;
+
+    switch (status) {
+      case "accepted":
+        dispatcherTitle = "Mission Accepted";
+        dispatcherBody = `${dispatcherCallSign} accepted mission ${update.incident.code}.`;
+        break;
+      case "en_route":
+        dispatcherTitle = "Ambulance En Route";
+        dispatcherBody = `${dispatcherCallSign} is en route to ${update.incident.address} for ${update.incident.code}.`;
+        break;
+      case "arrived":
+        dispatcherTitle = "Ambulance Arrived on Scene";
+        dispatcherBody = `${dispatcherCallSign} arrived on scene at incident ${update.incident.code}.`;
+        break;
+      case "patient_loaded":
+        dispatcherTitle = "Patient Loaded";
+        dispatcherBody = `${dispatcherCallSign} loaded patient for ${update.incident.code} — transporting to hospital.`;
+        break;
+      case "at_hospital":
+        dispatcherTitle = "Arrived at Hospital";
+        dispatcherBody = `${dispatcherCallSign} arrived at hospital with patient for ${update.incident.code}.`;
+        break;
+      case "completed":
+        dispatcherTitle = "Mission Completed · Patient Handover Complete";
+        dispatcherBody = `Mission ${update.incident.code} completed and patient handed over by ${dispatcherCallSign}. Ambulance returned to available fleet.`;
+        break;
+      case "cancelled":
+        dispatcherTitle = "Emergency Mission Cancelled";
+        dispatcherBody = `Incident ${update.incident.code} was cancelled.`;
+        break;
+    }
+
+    if (dispatcherTitle) {
       await notifyRole({
         role: "dispatcher",
-        kind: "driver_arrived",
-        title: "Ambulance Arrived on Scene",
-        body: `${update.driverCallSign} arrived at incident ${update.incident.code}.`,
-        data: { incidentId: update.incident.id, code: update.incident.code },
+        kind: status === "completed" ? "incident_completed" : `status_${status}`,
+        title: dispatcherTitle,
+        body: dispatcherBody,
+        data: { incidentId: update.incident.id, code: update.incident.code, status },
       });
     }
 

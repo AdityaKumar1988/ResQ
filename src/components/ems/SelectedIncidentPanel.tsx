@@ -51,9 +51,10 @@ export function SelectedIncidentPanel({ selectedId }: SelectedIncidentPanelProps
   }
 
   const cls = priorityClasses(incident.priority);
+  const isLive = incident.status !== "completed" && incident.status !== "cancelled";
   const driver = incident.driverId ? drivers.find((d) => d.id === incident.driverId) : null;
   const nextStatus = INCIDENT_STATUS_FLOW[incident.status] ?? null;
-  const distance = driver ? haversineKm(driver.location, incident.location) : null;
+  const distance = driver && isLive ? haversineKm(driver.location, incident.location) : null;
   const eta = distance != null ? etaMinutes(distance) : null;
   const missionSec = incident.reportedAt
     ? Math.floor((Date.now() - new Date(incident.reportedAt).getTime()) / 1000)

@@ -41,6 +41,9 @@ export function useMarkNotificationRead() {
         queryClient.setQueryData(queryKeys.notifications.all(), ctx.snapshot);
       }
     },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all() });
+    },
   });
 }
 

@@ -6,16 +6,16 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 export const Route = createFileRoute("/driver")({
   head: () => ({
     meta: [
-      { title: "Driver console · Smart EMS" },
+      { title: "Driver Console · ResQ" },
       {
         name: "description",
         content:
           "Ambulance driver console — accept assignments, live turn-by-turn navigation, patient handoff and hospital transfer.",
       },
-      { property: "og:title", content: "Driver console · Smart EMS" },
+      { property: "og:title", content: "Driver Console · ResQ" },
       {
         property: "og:description",
-        content: "Field responder console with live nav and mission workflow.",
+        content: "Field responder console with live nav and mission workflow for ResQ.",
       },
     ],
   }),
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/driver")({
 
 function DriverPage() {
   return (
-    <ProtectedRoute allowedRoles={["driver", "admin"]}>
+    <ProtectedRoute allowedRoles={["driver"]}>
       <AppShell>
         <DriverConsole />
       </AppShell>

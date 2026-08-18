@@ -214,8 +214,10 @@ export function NewIncidentDialog({
                 </div>
               )}
               {recommendations.map((r, i) => {
-                const d = drivers.find((x) => x.id === r.driverId)!;
-                const rating = Number(d.rating ?? 0);
+                const d = drivers.find((x) => x.id === r.driverId);
+                const rating = Number(d?.rating ?? 4.7);
+                const score = Number(r.score ?? 0);
+                const distanceKm = Number(r.distanceKm ?? 0);
                 return (
                   <button
                     key={r.driverId}
@@ -230,7 +232,9 @@ export function NewIncidentDialog({
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-mono text-xs font-bold">{d.callSign}</span>
+                          <span className="font-mono text-xs font-bold">
+                            {d?.callSign ?? "Unit"}
+                          </span>
                           {i === 0 && (
                             <span className="rounded bg-primary/20 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-primary">
                               Best
@@ -238,12 +242,12 @@ export function NewIncidentDialog({
                           )}
                         </div>
                         <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                          {d.name}
+                          {d?.name ?? "Available Unit"}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="font-mono text-sm font-bold text-primary">
-                          {r.score.toFixed(0)}
+                          {score.toFixed(0)}
                         </div>
                         <div className="text-[9px] uppercase text-muted-foreground">score</div>
                       </div>
@@ -252,11 +256,11 @@ export function NewIncidentDialog({
                     <div className="mt-2 flex items-center gap-3 text-[10px] text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
-                        {r.distanceKm.toFixed(1)} km
+                        {distanceKm.toFixed(1)} km
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        ETA {r.etaMinutes}m
+                        ETA {Number(r.etaMinutes ?? 0)}m
                       </span>
                       <span className="flex items-center gap-1">
                         <Star className="h-3 w-3 fill-p3 text-p3" />

@@ -15,21 +15,41 @@ const locationSchema = z.object({
   heading: z.number().optional(),
 });
 
+function normalizeDriver(d) {
+  if (!d) return null;
+  return {
+    ...d,
+    name: d.user_name || d.name || d.call_sign || "Driver",
+    phone: d.user_phone || d.phone || null,
+    rating: Number(d.rating != null ? d.rating : 4.7),
+    missions_completed: Number(d.missions_completed != null ? d.missions_completed : 0),
+    missions_active: Number(d.missions_active != null ? d.missions_active : 0),
+    avg_response_sec: Number(d.avg_response_sec != null ? d.avg_response_sec : 480),
+    location_lat: d.location_lat != null ? Number(d.location_lat) : null,
+    location_lng: d.location_lng != null ? Number(d.location_lng) : null,
+    heading: Number(d.heading != null ? d.heading : 0),
+  };
+}
+
 router.get(
   "/",
   asyncHandler(async (_req, res) => {
     const drivers = await db("drivers")
       .leftJoin("users", "users.id", "drivers.user_id")
       .select("drivers.*", "users.name as user_name", "users.phone as user_phone");
-    res.json({ drivers });
+    res.json({ drivers: drivers.map(normalizeDriver) });
   }),
 );
 
 router.get(
   "/me",
   asyncHandler(async (req, res) => {
-    const driver = await db("drivers").where({ user_id: req.user.sub }).first();
-    res.json({ driver });
+    const driver = await db("drivers")
+      .leftJoin("users", "users.id", "drivers.user_id")
+      .where({ "drivers.user_id": req.user.sub })
+      .select("drivers.*", "users.name as user_name", "users.phone as user_phone")
+      .first();
+    res.json({ driver: normalizeDriver(driver) });
   }),
 );
 
@@ -55,10 +75,17 @@ router.post(
         lng,
         heading: heading ?? 0,
       });
-      await emit.driverLocation(driver, { lat, lng, heading: heading ?? 0 });
-      emit.driverStatusChanged(driver);
+      const user = await db("users").where({ id: req.user.sub }).first();
+      const norm = normalizeDriver({
+        ...driver,
+        user_name: user?.name,
+        user_phone: user?.phone,
+      });
+      await emit.driverLocation(norm, { lat, lng, heading: heading ?? 0 });
+      emit.driverStatusChanged(norm);
+      return res.json({ driver: norm });
     }
-    res.json({ driver });
+    res.json({ driver: null });
   }),
 );
 
@@ -98,13 +125,22 @@ router.patch(
             .returning("*");
         }
       }
+
       return { driver: updatedDriver, vehicle: updatedVehicle };
     });
 
-    if (driver) emit.driverStatusChanged(driver);
-    if (vehicle) emit.fleetUpdated(vehicle);
-
-    res.json({ driver });
+    if (driver) {
+      const user = await db("users").where({ id: req.user.sub }).first();
+      const norm = normalizeDriver({
+        ...driver,
+        user_name: user?.name,
+        user_phone: user?.phone,
+      });
+      emit.driverStatusChanged(norm);
+      if (vehicle) emit.fleetUpdated(vehicle);
+      return res.json({ driver: norm });
+    }
+    res.json({ driver: null });
   }),
 );
 
