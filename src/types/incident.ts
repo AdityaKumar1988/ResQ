@@ -1,4 +1,5 @@
 import type { UserRole } from "./auth";
+import type { Driver } from "./driver";
 
 // ── Primitives ──────────────────────────────────────────────────────────────
 
@@ -70,6 +71,10 @@ export interface Incident {
   reportedAt: string;
   assignedAt?: string;
   completedAt?: string;
+  etaMinutes?: number | null;
+  distanceKm?: number | null;
+  polyline?: [number, number][] | null;
+  driver?: Driver;
   timeline?: TimelineEvent[];
 }
 

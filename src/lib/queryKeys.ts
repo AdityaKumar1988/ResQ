@@ -36,6 +36,8 @@ export const queryKeys = {
   // ── Dispatch ──────────────────────────────────────────────────────────────
   dispatch: {
     recommendations: (incidentId: string) => ["dispatch", "recommend", incidentId] as const,
+    estimate: (params?: { lat: number; lng: number; priority?: string }) =>
+      ["dispatch", "estimate", params ?? {}] as const,
   },
 
   // ── Analytics ─────────────────────────────────────────────────────────────
@@ -53,5 +55,11 @@ export const queryKeys = {
   // ── Users (admin) ─────────────────────────────────────────────────────────
   users: {
     all: () => ["users"] as const,
+  },
+
+  // ── Public (unauthenticated telemetry feed) ───────────────────────────────
+  public: {
+    stats: () => ["public", "stats"] as const,
+    health: () => ["public", "health"] as const,
   },
 } as const;

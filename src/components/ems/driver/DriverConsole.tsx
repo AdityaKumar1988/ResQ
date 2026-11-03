@@ -27,7 +27,7 @@ import {
 } from "@/lib/ems/types";
 import { etaMinutes, formatRelative, haversineKm } from "@/lib/ems/geo";
 import {
-  useDrivers,
+  useDriverMe,
   useUpdateDriverLocation,
   useUpdateDriverStatus,
 } from "@/hooks/fleet/use-drivers";
@@ -55,7 +55,7 @@ const NEXT_ACTION: Record<
 
 export function DriverConsole() {
   const { user } = useAuth();
-  const { data: drivers = [], isLoading, isError, refetch } = useDrivers();
+  const { data: driverMe, isLoading, isError, refetch } = useDriverMe();
   const { data: incidents = [] } = useIncidents();
   const { data: hospitals = [] } = useHospitals();
   const updateLocation = useUpdateDriverLocation();
@@ -63,9 +63,7 @@ export function DriverConsole() {
   const updateIncidentStatus = useUpdateIncidentStatus();
   const queryClient = useQueryClient();
 
-  // In real mode, the driver is the currently logged-in user
-  // Fallback: first driver in the list for demo purposes
-  const driver = useMemo(() => drivers.find((d) => d.userId === user?.id) ?? null, [drivers, user]);
+  const driver = driverMe ?? null;
   const driverId = driver?.id ?? null;
 
   const activeIncidents = useMemo(
@@ -145,7 +143,7 @@ export function DriverConsole() {
       <div className="flex min-h-0 flex-col gap-3">
         <DriverCard
           driver={driver}
-          drivers={drivers}
+          drivers={[driver]}
           onPick={() => {}} // In real mode, driver is always the logged-in user
           onToggleShift={() =>
             updateDriverStatus.mutate({ status: onShift ? "offline" : "available" })
@@ -269,13 +267,15 @@ function DriverCard({
             <span className="uppercase tracking-wider">{onShift ? "on shift" : "off shift"}</span>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="flex h-8 items-center gap-1 rounded-md border border-border bg-surface-2 px-2 text-[11px] font-medium hover:bg-accent"
-        >
-          Switch <ChevronDown className="h-3 w-3" />
-        </button>
+        {drivers.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="flex h-8 items-center gap-1 rounded-md border border-border bg-surface-2 px-2 text-[11px] font-medium hover:bg-accent"
+          >
+            Switch <ChevronDown className="h-3 w-3" />
+          </button>
+        )}
       </div>
 
       {open && (

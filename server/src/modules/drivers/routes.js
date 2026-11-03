@@ -4,6 +4,7 @@ import { db } from "../../db.js";
 import { authenticate, requireRole } from "../../middleware/auth.js";
 import { validate } from "../../utils/validate.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { HttpError } from "../../utils/httpError.js";
 import { emit } from "../../socket.js";
 
 const router = Router();
@@ -31,8 +32,10 @@ function normalizeDriver(d) {
   };
 }
 
+// Operational driver directory: accessible ONLY to dispatchers and administrators
 router.get(
   "/",
+  requireRole("dispatcher", "admin"),
   asyncHandler(async (_req, res) => {
     const drivers = await db("drivers")
       .leftJoin("users", "users.id", "drivers.user_id")
@@ -41,8 +44,10 @@ router.get(
   }),
 );
 
+// Driver's own profile: accessible ONLY to the authenticated driver
 router.get(
   "/me",
+  requireRole("driver"),
   asyncHandler(async (req, res) => {
     const driver = await db("drivers")
       .leftJoin("users", "users.id", "drivers.user_id")
@@ -50,6 +55,56 @@ router.get(
       .select("drivers.*", "users.name as user_name", "users.phone as user_phone")
       .first();
     res.json({ driver: normalizeDriver(driver) });
+  }),
+);
+
+// Single driver lookup with strict RBAC scoping:
+// Dispatcher/Admin: full lookup.
+// Driver: self only.
+// Citizen: only if the driver is assigned to an active emergency belonging to the citizen.
+router.get(
+  "/:id",
+  asyncHandler(async (req, res) => {
+    if (req.user.role === "dispatcher" || req.user.role === "admin") {
+      const driver = await db("drivers")
+        .leftJoin("users", "users.id", "drivers.user_id")
+        .where("drivers.id", req.params.id)
+        .select("drivers.*", "users.name as user_name", "users.phone as user_phone")
+        .first();
+      if (!driver) throw new HttpError(404, "Driver not found");
+      return res.json({ driver: normalizeDriver(driver) });
+    }
+
+    if (req.user.role === "driver") {
+      const driver = await db("drivers")
+        .leftJoin("users", "users.id", "drivers.user_id")
+        .where({ "drivers.id": req.params.id, "drivers.user_id": req.user.sub })
+        .select("drivers.*", "users.name as user_name", "users.phone as user_phone")
+        .first();
+      if (!driver) throw new HttpError(403, "Access denied");
+      return res.json({ driver: normalizeDriver(driver) });
+    }
+
+    if (req.user.role === "citizen") {
+      const assignedIncident = await db("incidents")
+        .where({
+          driver_id: req.params.id,
+          citizen_user_id: req.user.sub,
+        })
+        .whereNotIn("status", ["completed", "cancelled"])
+        .first();
+      if (!assignedIncident) throw new HttpError(403, "Access denied");
+
+      const driver = await db("drivers")
+        .leftJoin("users", "users.id", "drivers.user_id")
+        .where("drivers.id", req.params.id)
+        .select("drivers.*", "users.name as user_name", "users.phone as user_phone")
+        .first();
+      if (!driver) throw new HttpError(404, "Driver not found");
+      return res.json({ driver: normalizeDriver(driver) });
+    }
+
+    throw new HttpError(403, "Forbidden");
   }),
 );
 

@@ -47,6 +47,14 @@ export function connectSocket(): Socket {
   return getSocket().connect();
 }
 
+export function reconnectSocket(): Socket {
+  const s = getSocket();
+  if (s.connected) {
+    s.disconnect();
+  }
+  return s.connect();
+}
+
 export function disconnectSocket(): void {
   socket?.disconnect();
   // Don't null out — preserve the singleton so reconnect works

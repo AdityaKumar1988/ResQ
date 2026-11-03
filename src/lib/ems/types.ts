@@ -100,15 +100,30 @@ export interface Incident {
   assignedAt?: string;
   completedAt?: string;
   notes?: string;
+  etaMinutes?: number | null;
+  distanceKm?: number | null;
+  polyline?: [number, number][] | null;
   timeline?: TimelineEvent[];
 }
 
 export interface DispatchRecommendation {
   driverId: string;
+  driverName?: string;
+  callSign?: string;
+  vehicleId?: string;
+  vehiclePlate?: string;
+  vehicleModel?: string;
+  vehicleType?: "ALS" | "BLS" | "ICU" | "MICU";
+  vehicleLabel?: string;
+  capabilities?: string[];
   score: number;
   distanceKm: number;
   etaMinutes: number;
+  polyline?: [number, number][] | null;
+  provider?: string;
   reasons: string[];
+  location?: GeoPoint;
+  heading?: number;
 }
 
 export type UserRole = "citizen" | "dispatcher" | "driver" | "admin";

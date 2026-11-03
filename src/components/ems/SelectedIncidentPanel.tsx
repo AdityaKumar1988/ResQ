@@ -1,5 +1,17 @@
 import { useState, useMemo } from "react";
-import { CheckCircle2, ChevronRight, Clock, Loader2, Phone, Radio, User } from "lucide-react";
+import {
+  Award,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  Loader2,
+  Navigation,
+  Phone,
+  Radio,
+  Shield,
+  User,
+  Zap,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { INCIDENT_STATUS_LABELS, EMERGENCY_LABELS, type IncidentStatus } from "@/lib/ems/types";
 import { formatDuration, formatRelative, haversineKm, etaMinutes } from "@/lib/ems/geo";
@@ -52,10 +64,29 @@ export function SelectedIncidentPanel({ selectedId }: SelectedIncidentPanelProps
 
   const cls = priorityClasses(incident.priority);
   const isLive = incident.status !== "completed" && incident.status !== "cancelled";
-  const driver = incident.driverId ? drivers.find((d) => d.id === incident.driverId) : null;
+  const driver = incident.driverId
+    ? (incident.driver ?? drivers.find((d) => d.id === incident.driverId) ?? null)
+    : null;
   const nextStatus = INCIDENT_STATUS_FLOW[incident.status] ?? null;
-  const distance = driver && isLive ? haversineKm(driver.location, incident.location) : null;
-  const eta = distance != null ? etaMinutes(distance) : null;
+
+  const hasValidDriverLoc =
+    driver?.location &&
+    Number.isFinite(driver.location.lat) &&
+    Number.isFinite(driver.location.lng) &&
+    !(Math.abs(driver.location.lat) < 0.0001 && Math.abs(driver.location.lng) < 0.0001);
+
+  const hasValidIncidentLoc =
+    incident?.location &&
+    Number.isFinite(incident.location.lat) &&
+    Number.isFinite(incident.location.lng) &&
+    !(Math.abs(incident.location.lat) < 0.0001 && Math.abs(incident.location.lng) < 0.0001);
+
+  const distance =
+    incident.distanceKm ??
+    (hasValidDriverLoc && hasValidIncidentLoc && isLive
+      ? haversineKm(driver!.location, incident.location)
+      : null);
+  const eta = incident.etaMinutes ?? (distance != null ? etaMinutes(distance) : null);
   const missionSec = incident.reportedAt
     ? Math.floor((Date.now() - new Date(incident.reportedAt).getTime()) / 1000)
     : 0;
@@ -127,61 +158,122 @@ export function SelectedIncidentPanel({ selectedId }: SelectedIncidentPanelProps
 
       {incident.status === "reported" && (
         <div className="mt-2 w-full space-y-3 rounded-md border border-border bg-surface-2 p-3">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Dispatch Recommendations
+          <div className="flex items-center justify-between">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Zap className="h-3.5 w-3.5 text-primary" />
+              Intelligent Dispatch Recommendations
+            </div>
+            <span className="text-[10px] text-muted-foreground font-mono">Top 3 Units</span>
           </div>
           {isLoadingRecs ? (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="h-3 w-3 animate-spin" /> Calculating nearest units...
+            <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+              <Loader2 className="h-3 w-3 animate-spin text-primary" />
+              Evaluating street routes, crew skills & equipment…
             </div>
           ) : recommendations.length > 0 ? (
-            <div className="grid gap-2">
+            <div className="grid gap-2.5">
               {recommendations.slice(0, 3).map((rec, i) => {
-                const recommendedDriver = drivers.find((item) => item.id === rec.driverId);
-                if (!recommendedDriver) return null;
+                const callSign =
+                  rec.callSign ||
+                  drivers.find((d) => d.id === rec.driverId)?.callSign ||
+                  "Ambulance";
+                const driverName =
+                  rec.driverName || drivers.find((d) => d.id === rec.driverId)?.name;
+                const vehicleType = rec.vehicleType || "ALS";
 
                 return (
                   <div
                     key={rec.driverId}
-                    className="flex items-center justify-between rounded border border-border/50 bg-surface p-2"
+                    className={cn(
+                      "rounded-lg border p-2.5 transition-all",
+                      i === 0
+                        ? "border-primary/40 bg-surface/90 shadow-sm"
+                        : "border-border/60 bg-surface/60",
+                    )}
                   >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={cn(
-                          "flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold",
-                          i === 0
-                            ? "bg-primary/20 text-primary"
-                            : "bg-surface-3 text-muted-foreground",
-                        )}
-                      >
-                        #{i + 1}
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold">{recommendedDriver.callSign}</div>
-                        <div className="text-[10px] text-muted-foreground">
-                          {rec.distanceKm.toFixed(1)} km · ~{rec.etaMinutes} min
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={cn(
+                            "flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold",
+                            i === 0
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-surface-3 text-muted-foreground",
+                          )}
+                        >
+                          #{i + 1}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold font-mono">{callSign}</span>
+                            <span
+                              className={cn(
+                                "rounded px-1.5 py-0.2 font-mono text-[9px] font-bold border",
+                                vehicleType === "MICU"
+                                  ? "bg-purple-500/15 text-purple-400 border-purple-500/30"
+                                  : vehicleType === "ICU"
+                                    ? "bg-indigo-500/15 text-indigo-400 border-indigo-500/30"
+                                    : vehicleType === "ALS"
+                                      ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30"
+                                      : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+                              )}
+                            >
+                              {vehicleType}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-muted-foreground">
+                            {driverName ? `${driverName} · ` : ""}
+                            {rec.vehicleModel ? `${rec.vehicleModel} · ` : ""}
+                            <span className="text-foreground font-semibold">
+                              ~{rec.etaMinutes} min
+                            </span>{" "}
+                            ({rec.distanceKm.toFixed(1)} km)
+                          </div>
                         </div>
                       </div>
+
+                      <div className="flex flex-col items-end gap-1.5">
+                        <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] font-bold text-primary">
+                          Match {Math.round(rec.score)}%
+                        </span>
+                        <button
+                          onClick={() =>
+                            assignDriver.mutate({ incidentId: incident.id, driverId: rec.driverId })
+                          }
+                          disabled={assignDriver.isPending}
+                          className="flex h-6 items-center gap-1 rounded bg-primary px-2.5 text-[10px] font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                        >
+                          {assignDriver.isPending ? (
+                            <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                          ) : (
+                            "Assign Unit"
+                          )}
+                        </button>
+                      </div>
                     </div>
-                    <button
-                      onClick={() =>
-                        assignDriver.mutate({ incidentId: incident.id, driverId: rec.driverId })
-                      }
-                      disabled={assignDriver.isPending}
-                      className="flex h-7 items-center gap-1 rounded bg-primary px-3 text-[10px] font-bold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-                    >
-                      {assignDriver.isPending ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        "Assign"
-                      )}
-                    </button>
+
+                    {/* Explainable Rationale */}
+                    {rec.reasons && rec.reasons.length > 0 && (
+                      <div className="mt-2 rounded bg-surface-2/60 p-1.5 text-[10px] text-muted-foreground">
+                        <div className="font-semibold text-foreground/80 mb-0.5 text-[9px] uppercase tracking-wider">
+                          Why this unit:
+                        </div>
+                        <ul className="space-y-0.5">
+                          {rec.reasons.map((r, rIdx) => (
+                            <li key={rIdx} className="flex items-start gap-1">
+                              <span className="text-primary mt-0.5 font-bold">•</span>
+                              <span className="leading-tight">{r}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground py-1">
               No automatic recommendations available.
             </div>
           )}

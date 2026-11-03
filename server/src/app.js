@@ -16,6 +16,7 @@ import incidentRoutes from "./modules/incidents/routes.js";
 import dispatchRoutes from "./modules/dispatch/routes.js";
 import analyticsRoutes from "./modules/analytics/routes.js";
 import notificationRoutes from "./modules/notifications/routes.js";
+import publicRoutes from "./modules/public/routes.js";
 
 export function createApp() {
   const app = express();
@@ -64,6 +65,16 @@ export function createApp() {
     legacyHeaders: false,
     message: { error: "Too many auth requests, please try again later" },
   });
+  // Rate limit for public statistics endpoint (60 requests/min per IP)
+  const publicLimiter = rateLimit({
+    windowMs: 60_000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Too many public requests, please try again later" },
+  });
+  app.use("/api/public", publicLimiter, publicRoutes);
+
   app.use("/api/auth", authLimiter, authRoutes);
   app.use("/api/users", userRoutes);
   app.use("/api/drivers", driverRoutes);

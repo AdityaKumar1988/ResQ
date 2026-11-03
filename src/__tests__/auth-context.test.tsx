@@ -142,6 +142,37 @@ describe("AuthContext", () => {
     expect(mockClear).toHaveBeenCalled();
   });
 
+  it("preserves authenticated session across navigation without unintended session destruction", async () => {
+    const fakeUser = {
+      id: "u-dispatcher-1",
+      email: "dispatch@ems.local",
+      name: "Dana Dispatcher",
+      role: "dispatcher" as const,
+      created_at: new Date().toISOString(),
+    };
+
+    mockGetRefresh.mockReturnValue("valid-refresh-token");
+    mockRefresh.mockResolvedValueOnce({
+      accessToken: "access-token-1",
+      refreshToken: "valid-refresh-token",
+    });
+    mockMe.mockResolvedValueOnce({ user: fakeUser });
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user?.role).toBe("dispatcher");
+
+    // Simulating user navigating across pages (e.g. visiting landing page /):
+    // The session and tokens must NOT be cleared or logged out!
+    expect(mockClear).not.toHaveBeenCalled();
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user?.id).toBe("u-dispatcher-1");
+  });
+
   it("can() checks role membership", async () => {
     const fakeResponse = {
       user: {

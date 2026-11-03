@@ -1,12 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { vehiclesApi, type CreateVehicleInput } from "@/lib/api/vehicles";
 import { queryKeys } from "@/lib/queryKeys";
+import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 
 export function useVehicles() {
+  const { user } = useAuth();
+  const isAuthorized = user?.role === "dispatcher" || user?.role === "admin";
   return useQuery({
     queryKey: queryKeys.vehicles.all(),
     queryFn: vehiclesApi.list,
+    enabled: isAuthorized,
     staleTime: 60_000,
     select: (data) => data.vehicles,
   });

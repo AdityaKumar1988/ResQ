@@ -59,8 +59,20 @@ export interface UpdateDriverStatusInput {
 
 export interface DispatchRecommendation {
   driverId: string;
+  driverName?: string;
+  callSign?: string;
+  vehicleId?: string;
+  vehiclePlate?: string;
+  vehicleModel?: string;
+  vehicleType?: "ALS" | "BLS" | "ICU" | "MICU";
+  vehicleLabel?: string;
+  capabilities?: string[];
   score: number;
   distanceKm: number;
   etaMinutes: number;
+  polyline?: [number, number][] | null;
+  provider?: string;
   reasons: string[];
+  location?: GeoPoint;
+  heading?: number;
 }

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { driversApi } from "@/lib/api/drivers";
 import { queryKeys } from "@/lib/queryKeys";
+import { useAuth } from "@/lib/auth-context";
 import type { Driver } from "@/types/driver";
 
 function normalizeDriverClient(d: Driver): Driver {
@@ -34,9 +35,12 @@ function normalizeDriverClient(d: Driver): Driver {
 // ── All Drivers (dispatcher/admin) ────────────────────────────────────────────
 
 export function useDrivers() {
+  const { user } = useAuth();
+  const isAuthorized = user?.role === "dispatcher" || user?.role === "admin";
   return useQuery({
     queryKey: queryKeys.drivers.all(),
     queryFn: driversApi.list,
+    enabled: isAuthorized,
     staleTime: 30_000,
     refetchOnReconnect: true,
     select: (data) => data.drivers.map(normalizeDriverClient),
@@ -46,9 +50,12 @@ export function useDrivers() {
 // ── Current Driver's own record ───────────────────────────────────────────────
 
 export function useDriverMe() {
+  const { user } = useAuth();
+  const isDriver = user?.role === "driver";
   return useQuery({
     queryKey: queryKeys.drivers.me(),
     queryFn: driversApi.me,
+    enabled: isDriver,
     staleTime: 30_000,
     select: (data) => (data.driver ? normalizeDriverClient(data.driver) : null),
   });
@@ -71,6 +78,11 @@ export function useUpdateDriverLocation() {
             }
           : old,
       );
+      if (data.driver) {
+        queryClient.setQueryData(queryKeys.drivers.me(), {
+          driver: normalizeDriverClient(data.driver),
+        });
+      }
     },
   });
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
-import { connectSocket, disconnectSocket, getSocket } from "@/lib/socket";
+import { reconnectSocket } from "@/lib/socket";
 import { logger } from "@/lib/logger";
 import { queryKeys } from "@/lib/queryKeys";
 import { normalizeToCamel } from "@/lib/api/client";
@@ -10,6 +10,7 @@ import type { Incident } from "@/types/incident";
 import type { Driver } from "@/types/driver";
 import type { Notification } from "@/types/notification";
 import type { Vehicle } from "@/types/vehicle";
+import type { PublicStats } from "@/types/public";
 
 // Location update throttle: update cache at most once every 2s per driver
 const LOCATION_THROTTLE_MS = 2_000;
@@ -21,12 +22,16 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      disconnectSocket();
-      return;
-    }
+    // Reconnect socket so handshake re-runs with current auth state (or anonymous public role)
+    const socket = reconnectSocket();
 
-    const socket = connectSocket();
+    // ── Public: Telemetry Stats Update ────────────────────────────────────────
+    function onPublicStatsUpdate(raw: unknown) {
+      const stats = normalizeToCamel<PublicStats>(raw);
+      logger.socket("public:stats_update", stats);
+      queryClient.setQueryData(queryKeys.public.stats(), stats);
+    }
+    socket.on("public:stats_update", onPublicStatsUpdate);
 
     // ── Incident: Created ─────────────────────────────────────────────────────
     function onIncidentCreated(raw: unknown) {
@@ -94,12 +99,16 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       );
     }
 
-    // ── Driver: Location ──────────────────────────────────────────────────────
+    // ── Driver: Location & Live Telemetry ────────────────────────────────────
     function onDriverLocation(payload: {
       driverId: string;
+      incidentId?: string;
       lat: number;
       lng: number;
       heading?: number;
+      etaMinutes?: number | null;
+      distanceKm?: number | null;
+      polyline?: [number, number][] | null;
       at: string;
     }) {
       const now = Date.now();
@@ -111,7 +120,9 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         driverId: payload.driverId,
         lat: payload.lat,
         lng: payload.lng,
+        etaMinutes: payload.etaMinutes,
       });
+
       queryClient.setQueryData(queryKeys.drivers.all(), (old: { drivers: Driver[] } | undefined) =>
         old
           ? {
@@ -127,6 +138,104 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             }
           : old,
       );
+
+      // Update driver.me cache if the current user is this driver
+      queryClient.setQueryData(queryKeys.drivers.me(), (old: { driver: Driver } | undefined) =>
+        old && old.driver?.id === payload.driverId
+          ? {
+              driver: {
+                ...old.driver,
+                location: { lat: payload.lat, lng: payload.lng },
+                heading: payload.heading ?? old.driver.heading,
+              },
+            }
+          : old,
+      );
+
+      // Update assigned driver's location and live ETA on incident caches
+      queryClient.setQueriesData(
+        { queryKey: queryKeys.incidents.all() },
+        (old: { incidents: Incident[] } | undefined) =>
+          old
+            ? {
+                incidents: old.incidents.map((i) => {
+                  if (i.driverId === payload.driverId) {
+                    const existingDriver = i.driver ?? {
+                      id: payload.driverId,
+                      callSign: "Assigned Unit",
+                      name: "Ambulance Driver",
+                      rating: 4.7,
+                      missionsCompleted: 0,
+                      status: "en_route",
+                      location: { lat: payload.lat, lng: payload.lng },
+                      heading: payload.heading ?? 0,
+                    };
+                    return {
+                      ...i,
+                      etaMinutes:
+                        payload.etaMinutes !== undefined ? payload.etaMinutes : i.etaMinutes,
+                      distanceKm:
+                        payload.distanceKm !== undefined ? payload.distanceKm : i.distanceKm,
+                      polyline: payload.polyline !== undefined ? payload.polyline : i.polyline,
+                      driver: {
+                        ...existingDriver,
+                        location: { lat: payload.lat, lng: payload.lng },
+                        heading: payload.heading ?? existingDriver.heading,
+                      },
+                    };
+                  }
+                  return i;
+                }),
+              }
+            : old,
+      );
+
+      // If specific incidentId is present, also update detail cache
+      if (payload.incidentId) {
+        queryClient.setQueryData(
+          queryKeys.incidents.detail(payload.incidentId),
+          (old: { incident: Incident } | undefined) =>
+            old
+              ? {
+                  ...old,
+                  incident: {
+                    ...old.incident,
+                    etaMinutes:
+                      payload.etaMinutes !== undefined
+                        ? payload.etaMinutes
+                        : old.incident.etaMinutes,
+                    distanceKm:
+                      payload.distanceKm !== undefined
+                        ? payload.distanceKm
+                        : old.incident.distanceKm,
+                    polyline:
+                      payload.polyline !== undefined ? payload.polyline : old.incident.polyline,
+                    driver: old.incident.driver
+                      ? {
+                          ...old.incident.driver,
+                          location: { lat: payload.lat, lng: payload.lng },
+                          heading: payload.heading ?? old.incident.driver.heading,
+                        }
+                      : undefined,
+                  },
+                }
+              : old,
+        );
+      }
+    }
+
+    function onIncidentEtaUpdate(payload: {
+      driverId: string;
+      incidentId?: string;
+      lat: number;
+      lng: number;
+      heading?: number;
+      etaMinutes?: number | null;
+      distanceKm?: number | null;
+      polyline?: [number, number][] | null;
+      at: string;
+    }) {
+      onDriverLocation(payload);
     }
 
     // ── Driver: Status Changed ────────────────────────────────────────────────
@@ -221,6 +330,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     socket.on("incident:assigned", onIncidentAssigned);
     socket.on("incident:updated", onIncidentUpdated);
     socket.on("driver:location", onDriverLocation);
+    socket.on("incident:eta_update", onIncidentEtaUpdate);
     socket.on("driver:status", onDriverStatus);
     socket.on("fleet:updated", onFleetUpdated);
     socket.on("notification:created", onNotificationCreated);
@@ -229,10 +339,12 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
     // Cleanup
     cleanupRef.current = () => {
+      socket.off("public:stats_update", onPublicStatsUpdate);
       socket.off("incident:created", onIncidentCreated);
       socket.off("incident:assigned", onIncidentAssigned);
       socket.off("incident:updated", onIncidentUpdated);
       socket.off("driver:location", onDriverLocation);
+      socket.off("incident:eta_update", onIncidentEtaUpdate);
       socket.off("driver:status", onDriverStatus);
       socket.off("fleet:updated", onFleetUpdated);
       socket.off("notification:created", onNotificationCreated);

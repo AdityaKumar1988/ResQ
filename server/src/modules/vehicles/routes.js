@@ -21,6 +21,7 @@ const vehicleSchema = z.object({
 
 router.get(
   "/",
+  requireRole("admin", "dispatcher"),
   asyncHandler(async (_req, res) => {
     const vehicles = await db("vehicles").select("*").orderBy("plate");
     res.json({ vehicles });

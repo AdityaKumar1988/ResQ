@@ -23,6 +23,24 @@ export function useIncidents(filters?: IncidentFilters) {
           lat: i.lat ?? (i as unknown as Record<string, Record<string, number>>).location?.lat ?? 0,
           lng: i.lng ?? (i as unknown as Record<string, Record<string, number>>).location?.lng ?? 0,
         },
+        etaMinutes: i.etaMinutes != null ? Number(i.etaMinutes) : null,
+        distanceKm: i.distanceKm != null ? Number(i.distanceKm) : null,
+        polyline: Array.isArray((i as unknown as Record<string, unknown>).polyline)
+          ? ((i as unknown as Record<string, unknown>).polyline as [number, number][])
+          : null,
+        driver: i.driver
+          ? {
+              ...i.driver,
+              location: {
+                lat:
+                  i.driver.location?.lat ??
+                  Number((i.driver as unknown as Record<string, unknown>).locationLat ?? 0),
+                lng:
+                  i.driver.location?.lng ??
+                  Number((i.driver as unknown as Record<string, unknown>).locationLng ?? 0),
+              },
+            }
+          : undefined,
         timeline: i.timeline ?? [],
       })),
   });
@@ -147,6 +165,38 @@ export function useDispatchRecommendations(incidentId: string | null) {
 
 export function useActiveIncidents() {
   return useIncidents();
+}
+
+// ── Pre-Dispatch Response Estimate ───────────────────────────────────────────
+
+export function useDispatchEstimate(params?: {
+  lat: number;
+  lng: number;
+  priority?: string;
+  enabled?: boolean;
+}) {
+  const enabled =
+    (params?.enabled ?? true) &&
+    typeof params?.lat === "number" &&
+    typeof params?.lng === "number" &&
+    !isNaN(params.lat) &&
+    !isNaN(params.lng) &&
+    !(Math.abs(params.lat) < 0.0001 && Math.abs(params.lng) < 0.0001);
+
+  return useQuery({
+    queryKey: queryKeys.dispatch.estimate(params),
+    queryFn: async () => {
+      const { dispatchApi } = await import("@/lib/api/dispatch");
+      return dispatchApi.estimate({
+        lat: params!.lat,
+        lng: params!.lng,
+        priority: params?.priority,
+      });
+    },
+    enabled,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+  });
 }
 
 // ── Incident Status helpers ───────────────────────────────────────────────────

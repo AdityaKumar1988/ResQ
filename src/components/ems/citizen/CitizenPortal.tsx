@@ -10,7 +10,6 @@ import {
   Phone,
   Send,
   Sparkles,
-  Star,
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,12 +22,15 @@ import {
 } from "@/lib/ems/types";
 import type { Incident } from "@/types/incident";
 import type { Driver } from "@/types/driver";
-import { recommendDrivers } from "@/lib/ems/recommend";
 import { etaMinutes, formatRelative, haversineKm } from "@/lib/ems/geo";
 import { priorityClasses } from "@/lib/ems/style";
 import { useCitizenIdentity } from "@/lib/ems/citizen-identity";
-import { useIncidents, useCreateIncident, useAssignDriver } from "@/hooks/dispatch/use-incidents";
-import { useDrivers } from "@/hooks/fleet/use-drivers";
+import {
+  useIncidents,
+  useCreateIncident,
+  useAssignDriver,
+  useDispatchEstimate,
+} from "@/hooks/dispatch/use-incidents";
 import { useHospitals } from "@/hooks/fleet/use-hospitals";
 import { useAuth } from "@/lib/auth-context";
 import { CitizenMapWrapper } from "./CitizenMapWrapper";
@@ -65,7 +67,6 @@ const TYPE_TO_PRIORITY: Record<EmergencyType, Priority> = {
 export function CitizenPortal() {
   const [citizen, updateCitizen] = useCitizenIdentity();
   const { data: incidents = [], isLoading, isError, refetch } = useIncidents();
-  const { data: drivers = [] } = useDrivers();
   const { user } = useAuth();
   const [tab, setTab] = useState<Tab>("report");
   const [activeIncidentId, setActiveIncidentId] = useState<string | null>(null);
@@ -151,7 +152,6 @@ export function CitizenPortal() {
           <TrackPanel
             incident={activeIncident}
             citizen={citizen}
-            drivers={drivers}
             now={now}
             onReport={() => setTab("report")}
           />
@@ -266,7 +266,6 @@ function ReportForm({
   onDispatched: (id: string) => void;
 }) {
   const { user } = useAuth();
-  const { data: drivers = [] } = useDrivers();
   const createMutation = useCreateIncident();
   const assignMutation = useAssignDriver();
   const [type, setType] = useState<EmergencyType>("cardiac");
@@ -297,12 +296,12 @@ function ReportForm({
       },
     );
   }, []);
-  const recs = useMemo(
-    () => recommendDrivers({ location, priority }, drivers, 1),
-    [location, priority, drivers],
-  );
-  const best = recs[0];
-  const bestDriver = best ? drivers.find((d) => d.id === best.driverId) : null;
+
+  const { data: estimate, isLoading: isLoadingEstimate } = useDispatchEstimate({
+    lat: location.lat,
+    lng: location.lng,
+    priority,
+  });
 
   function handleType(t: EmergencyType) {
     setType(t);
@@ -441,28 +440,35 @@ function ReportForm({
             </span>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className={cn("text-3xl font-bold tabular-nums", cls.text)}>
-              {best ? best.etaMinutes : "—"}
-            </span>
-            <span className="text-xs text-muted-foreground">minutes</span>
+            {isLoadingEstimate ? (
+              <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                Calculating road route…
+              </span>
+            ) : estimate?.isAvailable && estimate.etaMinutes != null ? (
+              <>
+                <span className={cn("text-3xl font-bold tabular-nums", cls.text)}>
+                  {estimate.etaMinutes}
+                </span>
+                <span className="text-xs text-muted-foreground">minutes</span>
+              </>
+            ) : estimate && !estimate.isAvailable ? (
+              <span className="text-sm font-semibold text-amber-500">No units available</span>
+            ) : (
+              <span className={cn("text-3xl font-bold tabular-nums", cls.text)}>—</span>
+            )}
           </div>
           <div className="mt-1 text-[11px] text-muted-foreground">
-            Priority {priority} · target under {Math.floor(PRIORITY_META[priority].slaSec / 60)} min
+            {estimate?.isAvailable && estimate.distanceKm != null ? (
+              <span>Nearest unit ~{estimate.distanceKm.toFixed(1)} km away · </span>
+            ) : null}
+            Priority {priority} · SLA target under {Math.floor(PRIORITY_META[priority].slaSec / 60)}{" "}
+            min
           </div>
-          {bestDriver && (
-            <div className="mt-3 rounded-md border border-border bg-surface/60 p-2.5">
-              <div className="flex items-center justify-between">
-                <div className="font-mono text-xs font-bold">{bestDriver.callSign}</div>
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <Star className="h-3 w-3 fill-p3 text-p3" />
-                  {Number(bestDriver.rating ?? 0).toFixed(1)}
-                </div>
-              </div>
-              <div className="text-[11px] text-muted-foreground">{bestDriver.name}</div>
-              <div className="mt-1 flex gap-3 text-[10px] text-muted-foreground">
-                <span>{best?.distanceKm.toFixed(1)} km away</span>
-                <span>{bestDriver.missionsCompleted} missions</span>
-              </div>
+          {estimate && !estimate.isAvailable && (
+            <div className="mt-2.5 rounded-md border border-amber-500/20 bg-amber-500/10 p-2 text-[11px] text-amber-400">
+              All sector units are currently engaged on priority calls. Emergency dispatchers will
+              assign the next available unit immediately upon submission.
             </div>
           )}
         </div>
@@ -487,20 +493,16 @@ function ReportForm({
 function TrackPanel({
   incident,
   citizen,
-  drivers,
   now,
   onReport,
 }: {
   incident: Incident | null;
   citizen: ReturnType<typeof useCitizenIdentity>[0];
-  drivers: Driver[];
   now: number | null;
   onReport: () => void;
 }) {
   const { data: hospitals = [] } = useHospitals();
-  const driver = incident?.driverId
-    ? (drivers.find((d) => d.id === incident.driverId) ?? null)
-    : null;
+  const driver = incident?.driver ?? null;
   const hospital = useMemo(() => {
     if (!incident) return null;
     if (incident.hospitalId) return hospitals.find((h) => h.id === incident.hospitalId) ?? null;
@@ -538,9 +540,37 @@ function TrackPanel({
   const isCancelled = incident.status === "cancelled";
   const isLive = !isCompleted && !isCancelled;
 
-  const distanceKm = driver && isLive ? haversineKm(driver.location, incident.location) : null;
-  const eta = distanceKm != null ? etaMinutes(distanceKm) : null;
-  const arrived = distanceKm != null && distanceKm < 0.08;
+  const hasValidDriverLoc =
+    driver?.location &&
+    typeof driver.location.lat === "number" &&
+    typeof driver.location.lng === "number" &&
+    !isNaN(driver.location.lat) &&
+    !isNaN(driver.location.lng) &&
+    (driver.location.lat !== 0 || driver.location.lng !== 0);
+
+  const hasValidIncidentLoc =
+    incident?.location &&
+    typeof incident.location.lat === "number" &&
+    typeof incident.location.lng === "number" &&
+    !isNaN(incident.location.lat) &&
+    !isNaN(incident.location.lng) &&
+    (incident.location.lat !== 0 || incident.location.lng !== 0);
+
+  const distanceKm =
+    incident.distanceKm != null
+      ? incident.distanceKm
+      : driver && hasValidDriverLoc && hasValidIncidentLoc && isLive
+        ? haversineKm(driver.location, incident.location)
+        : null;
+
+  const eta =
+    incident.etaMinutes != null
+      ? incident.etaMinutes
+      : distanceKm != null
+        ? etaMinutes(distanceKm)
+        : null;
+
+  const arrived = incident.status === "arrived" || (distanceKm != null && distanceKm < 0.08);
   const cls = priorityClasses(incident.priority);
 
   return (

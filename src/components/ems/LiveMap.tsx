@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import type * as LType from "leaflet";
+import { Crosshair, Focus } from "lucide-react";
 import { OPS_CENTER } from "@/lib/ems/geo";
 import { PRIORITY_META } from "@/lib/ems/types";
 import { useIncidents } from "@/hooks/dispatch/use-incidents";
 import { useDrivers } from "@/hooks/fleet/use-drivers";
 import { useHospitals } from "@/hooks/fleet/use-hospitals";
+import { dispatchApi } from "@/lib/api/dispatch";
 
 // This file imports leaflet at module scope, so it must ONLY be imported
 // via React.lazy inside a <ClientOnly> boundary.
@@ -167,39 +169,126 @@ export default function LiveMap({
     });
   }, [drivers]);
 
-  // Draw route line for selected incident + its assigned driver
+  // Draw live road route line for selected incident + its assigned driver
   useEffect(() => {
     if (!routeLayerRef.current || !mapRef.current) return;
     routeLayerRef.current.clearLayers();
     const inc = incidents.find((i) => i.id === selectedId);
     if (!inc || inc.status === "completed" || inc.status === "cancelled") return;
     const driver = inc.driverId ? drivers.find((d) => d.id === inc.driverId) : null;
+
     if (
       driver &&
       driver.status !== "available" &&
       driver.status !== "offline" &&
-      driver.status !== "maintenance"
+      driver.status !== "maintenance" &&
+      driver.location &&
+      (driver.location.lat !== 0 || driver.location.lng !== 0)
     ) {
-      L.polyline(
-        [
-          [driver.location.lat, driver.location.lng],
-          [inc.location.lat, inc.location.lng],
-        ],
-        {
-          color: priorityColor(inc.priority),
-          weight: 3,
-          opacity: 0.7,
-          dashArray: "6 6",
-        },
-      ).addTo(routeLayerRef.current);
+      // 1. If incident already has road polyline from Socket.IO / backend
+      if (inc.polyline && Array.isArray(inc.polyline) && inc.polyline.length >= 2) {
+        L.polyline(inc.polyline, {
+          color: "#0891b2",
+          weight: 7,
+          opacity: 0.35,
+          lineCap: "round",
+          lineJoin: "round",
+        }).addTo(routeLayerRef.current);
+
+        L.polyline(inc.polyline, {
+          color: "#06b6d4",
+          weight: 4.5,
+          opacity: 0.95,
+          lineCap: "round",
+          lineJoin: "round",
+        }).addTo(routeLayerRef.current);
+      } else {
+        // Asynchronously fetch road geometry from route endpoint
+        dispatchApi
+          .getRoute({
+            fromLat: driver.location.lat,
+            fromLng: driver.location.lng,
+            toLat: inc.location.lat,
+            toLng: inc.location.lng,
+          })
+          .then((res) => {
+            if (res?.polyline && Array.isArray(res.polyline) && res.polyline.length >= 2) {
+              if (!routeLayerRef.current) return;
+              routeLayerRef.current.clearLayers();
+              L.polyline(res.polyline, {
+                color: "#0891b2",
+                weight: 7,
+                opacity: 0.35,
+                lineCap: "round",
+                lineJoin: "round",
+              }).addTo(routeLayerRef.current);
+
+              L.polyline(res.polyline, {
+                color: "#06b6d4",
+                weight: 4.5,
+                opacity: 0.95,
+                lineCap: "round",
+                lineJoin: "round",
+              }).addTo(routeLayerRef.current);
+            }
+          })
+          .catch(() => {
+            // If offline, do NOT draw a fake straight line per specification
+          });
+      }
     }
     mapRef.current.panTo([inc.location.lat, inc.location.lng], { animate: true });
+  }, [selectedId, incidents, drivers]);
+
+  const handleRecenter = useCallback(() => {
+    if (!mapRef.current) return;
+    const inc = incidents.find((i) => i.id === selectedId);
+    if (inc) {
+      mapRef.current.panTo([inc.location.lat, inc.location.lng], { animate: true });
+    } else {
+      mapRef.current.panTo([OPS_CENTER.lat, OPS_CENTER.lng], { animate: true });
+    }
+  }, [selectedId, incidents]);
+
+  const handleFitRoute = useCallback(() => {
+    if (!mapRef.current) return;
+    const inc = incidents.find((i) => i.id === selectedId);
+    if (!inc) return;
+    const driver = inc.driverId ? drivers.find((d) => d.id === inc.driverId) : null;
+    const points: [number, number][] = [[inc.location.lat, inc.location.lng]];
+    if (driver?.location && (driver.location.lat !== 0 || driver.location.lng !== 0)) {
+      points.push([driver.location.lat, driver.location.lng]);
+    }
+    if (inc.polyline && Array.isArray(inc.polyline) && inc.polyline.length >= 2) {
+      inc.polyline.forEach((pt) => points.push(pt));
+    }
+    if (points.length > 1) {
+      mapRef.current.fitBounds(points, { padding: [50, 50], maxZoom: 15, animate: true });
+    }
   }, [selectedId, incidents, drivers]);
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-lg border border-border bg-surface panel">
       <div ref={containerRef} className="h-full w-full" />
       <MapLegend />
+
+      {/* Floating Action Controls */}
+      <div className="absolute top-3 right-3 z-[400] flex flex-col gap-1.5">
+        <button
+          onClick={handleRecenter}
+          className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-surface/90 text-foreground shadow-md backdrop-blur transition-all hover:bg-surface hover:text-primary active:scale-95"
+          title="Recenter"
+        >
+          <Crosshair className="h-4 w-4" />
+        </button>
+        <button
+          onClick={handleFitRoute}
+          className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-surface/90 text-foreground shadow-md backdrop-blur transition-all hover:bg-surface hover:text-cyan-400 active:scale-95"
+          title="Fit Route"
+        >
+          <Focus className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   );
 }

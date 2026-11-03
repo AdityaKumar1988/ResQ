@@ -1,6 +1,6 @@
-<div align="center">
+﻿<div align="center">
 
-# 🚑 ResQ — Emergency Operations Platform
+# ≡ƒÜæ ResQ ΓÇö Emergency Operations Platform
 
 ### Mission-Critical Emergency Medical Services Dispatch & Fleet Telemetry System
 
@@ -18,13 +18,13 @@
 <br />
 
 ```
-  ____                 ___  
- |  _ \  ___  ___     / _ \ 
+  ____                 ___
+ |  _ \  ___  ___     / _ \
  | |_) |/ _ \/ __|   | | | |
  |  _ <|  __/\__ \_  | |_| |
  |_| \_\\___||___(_)  \__\_\
-                            
- Real-Time Emergency Dispatch · Fleet Telemetry · Concurrency-Safe Routing
+
+ Real-Time Emergency Dispatch ┬╖ Fleet Telemetry ┬╖ Concurrency-Safe Routing
 ```
 
 <p align="center">
@@ -32,55 +32,55 @@
   It bridges citizens in critical distress, 911/emergency medical dispatchers, and field ambulance drivers through an ACID-compliant transactional backend, real-time bidirectional WebSocket telemetry, and an automated multi-factor ambulance recommendation engine.
 </p>
 
-[Explore System Architecture](#%EF%B8%8F-system-architecture) •
-[Concurrency & Locking](#-concurrency-safe-ambulance-assignment) •
-[State Machine](#-incident-state-machine) •
-[API Reference](#-api-reference) •
+[Explore System Architecture](#%EF%B8%8F-system-architecture) ΓÇó
+[Concurrency & Locking](#-concurrency-safe-ambulance-assignment) ΓÇó
+[State Machine](#-incident-state-machine) ΓÇó
+[API Reference](#-api-reference) ΓÇó
 [Quick Start](#-installation--local-setup)
 
 </div>
 
 ---
 
-## 📑 Table of Contents
+## ≡ƒôæ Table of Contents
 
-- [🚨 Overview](#-overview)
-- [🎯 Problem Statement](#-problem-statement)
-- [✨ Key Features](#-key-features)
-  - [🚨 Emergency Incident Lifecycle](#-emergency-incident-lifecycle)
-  - [🚑 Multi-Factor Ambulance Recommendation Engine](#-multi-factor-ambulance-recommendation-engine)
-  - [🔒 Concurrency-Safe Ambulance Assignment](#-concurrency-safe-ambulance-assignment)
-  - [📍 Real-Time GPS Tracking & Live Tactical Map](#-real-time-gps-tracking--live-tactical-map)
-  - [⚡ Bi-Directional WebSocket Telemetry](#-bi-directional-websocket-telemetry)
-  - [🔔 Scoped Real-Time Notification System](#-scoped-real-time-notification-system)
-  - [🔐 Authentication & Role-Based Access Control (RBAC)](#-authentication--role-based-access-control-rbac)
-  - [🛡️ Runtime Validation (Zod vs TypeScript)](#%EF%B8%8F-runtime-validation-zod-vs-typescript)
-- [🗄️ Database Architecture](#%EF%B8%8F-database-architecture)
-- [🏗️ System Architecture](#%EF%B8%8F-system-architecture)
-- [🔄 End-to-End Mission Workflow](#-end-to-end-mission-workflow)
-- [🧠 Important Engineering Decisions](#-important-engineering-decisions)
-- [📊 Incident State Machine](#-incident-state-machine)
-- [📈 Reliability & Failure Handling](#-reliability--failure-handling)
-- [⏱️ SLA Tracking & Performance Analytics](#%EF%B8%8F-sla-tracking--performance-analytics)
-- [📝 Auditability & Mission Timelines](#-auditability--mission-timelines)
-- [🧰 Tech Stack](#-tech-stack)
-- [📁 Project Structure](#-project-structure)
-- [🔌 API Reference](#-api-reference)
-- [⚡ Socket.IO Event Reference](#-socketio-event-reference)
-- [🚀 Installation & Local Setup](#-installation--local-setup)
-- [🌐 Deployment Architecture](#-deployment-architecture)
-- [📸 Screenshots](#-screenshots)
-- [🎥 Demo](#-demo)
-- [👨‍💻 Engineering Highlights & Contribution](#-engineering-highlights--contribution)
-- [🧪 Example Scenario Walkthrough](#-example-scenario-walkthrough)
-- [⚠️ Limitations](#%EF%B8%8F-limitations)
-- [🔮 Future Improvements](#-future-improvements)
-- [📚 Learning Outcomes](#-learning-outcomes)
-- [👤 Author](#-author)
+- [≡ƒÜ¿ Overview](#-overview)
+- [≡ƒÄ» Problem Statement](#-problem-statement)
+- [Γ£¿ Key Features](#-key-features)
+  - [≡ƒÜ¿ Emergency Incident Lifecycle](#-emergency-incident-lifecycle)
+  - [≡ƒÜæ Multi-Factor Ambulance Recommendation Engine](#-multi-factor-ambulance-recommendation-engine)
+  - [≡ƒöÆ Concurrency-Safe Ambulance Assignment](#-concurrency-safe-ambulance-assignment)
+  - [≡ƒôì Real-Time GPS Tracking & Live Tactical Map](#-real-time-gps-tracking--live-tactical-map)
+  - [ΓÜí Bi-Directional WebSocket Telemetry](#-bi-directional-websocket-telemetry)
+  - [≡ƒöö Scoped Real-Time Notification System](#-scoped-real-time-notification-system)
+  - [≡ƒöÉ Authentication & Role-Based Access Control (RBAC)](#-authentication--role-based-access-control-rbac)
+  - [≡ƒ¢í∩╕Å Runtime Validation (Zod vs TypeScript)](#%EF%B8%8F-runtime-validation-zod-vs-typescript)
+- [≡ƒùä∩╕Å Database Architecture](#%EF%B8%8F-database-architecture)
+- [≡ƒÅù∩╕Å System Architecture](#%EF%B8%8F-system-architecture)
+- [≡ƒöä End-to-End Mission Workflow](#-end-to-end-mission-workflow)
+- [≡ƒºá Important Engineering Decisions](#-important-engineering-decisions)
+- [≡ƒôè Incident State Machine](#-incident-state-machine)
+- [≡ƒôê Reliability & Failure Handling](#-reliability--failure-handling)
+- [ΓÅ▒∩╕Å SLA Tracking & Performance Analytics](#%EF%B8%8F-sla-tracking--performance-analytics)
+- [≡ƒô¥ Auditability & Mission Timelines](#-auditability--mission-timelines)
+- [≡ƒº░ Tech Stack](#-tech-stack)
+- [≡ƒôü Project Structure](#-project-structure)
+- [≡ƒöî API Reference](#-api-reference)
+- [ΓÜí Socket.IO Event Reference](#-socketio-event-reference)
+- [≡ƒÜÇ Installation & Local Setup](#-installation--local-setup)
+- [≡ƒîÉ Deployment Architecture](#-deployment-architecture)
+- [≡ƒô╕ Screenshots](#-screenshots)
+- [≡ƒÄÑ Demo](#-demo)
+- [≡ƒæ¿ΓÇì≡ƒÆ╗ Engineering Highlights & Contribution](#-engineering-highlights--contribution)
+- [≡ƒº¬ Example Scenario Walkthrough](#-example-scenario-walkthrough)
+- [ΓÜá∩╕Å Limitations](#%EF%B8%8F-limitations)
+- [≡ƒö« Future Improvements](#-future-improvements)
+- [≡ƒôÜ Learning Outcomes](#-learning-outcomes)
+- [≡ƒæñ Author](#-author)
 
 ---
 
-## 🚨 Overview
+## ≡ƒÜ¿ Overview
 
 In life-or-death medical emergencies, the single most critical factor is **response latency**. Traditional emergency dispatch systems often suffer from fragmented communication, phone-based manual relaying, dispatch race conditions, and lack of live situational telemetry.
 
@@ -93,36 +93,37 @@ In life-or-death medical emergencies, the single most critical factor is **respo
 
 ### Target Personas
 
-| Role | Operational Responsibility | Portal Route | Primary Capabilities |
-| :--- | :--- | :--- | :--- |
-| **Citizen** | Emergency Reporting & Patient Tracking | `/citizen` | One-click geolocation reporting, live responder map, driver call sign/phone display, mission status updates. |
-| **Dispatcher** | Command Center Fleet Triage | `/dispatch` | Interactive tactical Leaflet map, live incident feed with SLA timers, automated ambulance recommendation cards, manual override. |
-| **Driver** | Field Navigation & Mission Execution | `/driver` | Live mission alert queue, turn-by-turn stage advancement (`accepted` &rarr; `completed`), real-time GPS beacon streaming, shift toggle. |
-| **Administrator** | Governance, Infrastructure & Fleet CRUD | `/admin` | Dynamic user management, hospital bed availability tracking, fleet vehicle provisioning, platform audit logs. |
+| Role              | Operational Responsibility              | Portal Route | Primary Capabilities                                                                                                                    |
+| :---------------- | :-------------------------------------- | :----------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
+| **Citizen**       | Emergency Reporting & Patient Tracking  | `/citizen`   | One-click geolocation reporting, live responder map, driver call sign/phone display, mission status updates.                            |
+| **Dispatcher**    | Command Center Fleet Triage             | `/dispatch`  | Interactive tactical Leaflet map, live incident feed with SLA timers, automated ambulance recommendation cards, manual override.        |
+| **Driver**        | Field Navigation & Mission Execution    | `/driver`    | Live mission alert queue, turn-by-turn stage advancement (`accepted` &rarr; `completed`), real-time GPS beacon streaming, shift toggle. |
+| **Administrator** | Governance, Infrastructure & Fleet CRUD | `/admin`     | Dynamic user management, hospital bed availability tracking, fleet vehicle provisioning, platform audit logs.                           |
 
 ---
 
-## 🎯 Problem Statement
+## ≡ƒÄ» Problem Statement
 
 When a cardiac arrest or major trauma occurs, emergency response coordinates four asynchronous actors under extreme time pressure:
 
 ```
-┌─────────┐      1. Create Emergency       ┌────────────┐
-│ Citizen │ ─────────────────────────────> │ Dispatcher │
-└─────────┘                                └─────┬──────┘
-     ▲                                           │ 2. Automated Scoring
-     │ 5. Real-Time Tracking                     ▼    & Row-Locked Assignment
-     │                                     ┌────────────┐
-     └──────────────────────────────────── │   Driver   │ <─────── Unit Assigned
-               4. GPS Beacon Pings         └─────┬──────┘
-                                                 │ 3. State Progression
-                                                 ▼
-                                           ┌────────────┐
-                                           │  Hospital  │ (Bed Allocation & Handover)
-                                           └────────────┘
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ      1. Create Emergency       ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé Citizen Γöé ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ> Γöé Dispatcher Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ                                ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+     Γû▓                                           Γöé 2. Automated Scoring
+     Γöé 5. Real-Time Tracking                     Γû╝    & Row-Locked Assignment
+     Γöé                                     ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+     ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ Γöé   Driver   Γöé <ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ Unit Assigned
+               4. GPS Beacon Pings         ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+                                                 Γöé 3. State Progression
+                                                 Γû╝
+                                           ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+                                           Γöé  Hospital  Γöé (Bed Allocation & Handover)
+                                           ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
 ```
 
 ### The Technical Challenges Solved by ResQ:
+
 1. **The Double-Assignment Race Condition**: In high-load scenarios, two dispatchers clicking "Assign" on the same closest ambulance at the exact same millisecond can create duplicate missions and stranded patients.
 2. **Stale Coordinates & Blind Routing**: Dispatchers cannot make informed decisions without sub-second updates on ambulance availability, heading, and live location.
 3. **Invalid Out-of-Order Lifecycle Transitions**: A driver cannot transition an incident directly from `reported` to `completed`, bypass patient loading, or edit a cancelled incident.
@@ -130,12 +131,14 @@ When a cardiac arrest or major trauma occurs, emergency response coordinates fou
 
 ---
 
-## ✨ Key Features
+## Γ£¿ Key Features
 
-### 🚨 Emergency Incident Lifecycle
-Citizens can report emergencies with automated browser coordinate detection (with fallback to regional operations center coordinates: `12.9692° N, 79.1559° E`). Incidents are categorized by emergency type (`cardiac`, `trauma`, `stroke`, `respiratory`, `obstetric`, `pediatric`, `psychiatric`, `burn`, `other`) and assigned strict triage priorities (`P1`, `P2`, `P3`, `P4`) with deterministic SLA response targets.
+### ≡ƒÜ¿ Emergency Incident Lifecycle
 
-### 🚑 Multi-Factor Ambulance Recommendation Engine
+Citizens can report emergencies with automated browser coordinate detection (with fallback to regional operations center coordinates: `12.9692┬░ N, 79.1559┬░ E`). Incidents are categorized by emergency type (`cardiac`, `trauma`, `stroke`, `respiratory`, `obstetric`, `pediatric`, `psychiatric`, `burn`, `other`) and assigned strict triage priorities (`P1`, `P2`, `P3`, `P4`) with deterministic SLA response targets.
+
+### ≡ƒÜæ Multi-Factor Ambulance Recommendation Engine
+
 Rather than simply assigning the closest vehicle as the crow flies, ResQ implements an algorithmic scoring engine in `server/src/modules/dispatch/routes.js` that evaluates all active, unassigned units:
 
 $$\text{Distance (km)} = \text{haversineKm}(\text{driverLoc}, \text{incidentLoc})$$
@@ -150,60 +153,66 @@ $$\text{Score} = 100 - (\text{Distance} \times 8) - (\text{Workload} \times 5) +
 - **Service Rating Multiplier**: Rewards highly rated drivers (`+20 pts` per rating point above 4.5).
 - **Top 5 Ranking**: Results are sorted descending by score and served to dispatchers in sub-15ms queries.
 
-### 🔒 Concurrency-Safe Ambulance Assignment
+### ≡ƒöÆ Concurrency-Safe Ambulance Assignment
+
 The core dispatch transaction (`POST /api/incidents/:id/assign`) is strictly protected against concurrency anomalies using PostgreSQL row-level exclusive locks:
 
 ```
 Dispatcher A (Thread 1)                          Dispatcher B (Thread 2)
-      │                                                │
-      ├─────── BEGIN TRANSACTION                       ├─────── BEGIN TRANSACTION
-      │                                                │
-      ├─────── SELECT * FROM incidents                 │
-      │        WHERE id = $1 FOR UPDATE                │
-      │        (Acquires Row Lock)                     │
-      │                                                ├─────── SELECT * FROM incidents
-      ├─────── SELECT * FROM drivers                   │        WHERE id = $1 FOR UPDATE
-      │        WHERE id = $2 FOR UPDATE                │        (BLOCKED - WAITING FOR LOCK)
-      │        (Acquires Driver Lock)                  │        ┆
-      │                                                │        ┆
-      ├─────── Status == 'available' [PASS]            │        ┆
-      ├─────── UPDATE incidents SET status='assigned'  │        ┆
-      ├─────── UPDATE drivers SET status='busy'        │        ┆
-      ├─────── COMMIT TRANSACTION                      │        ┆
-      │        (Releases Locks)                        │        ┆
-      ▼                                                │        ▼
-   200 OK                                              ├─────── (Unblocked, Reads Locked Row)
-                                                       ├─────── Status == 'busy' [FAIL]
-                                                       ├─────── ROLLBACK TRANSACTION
-                                                       ▼
+      Γöé                                                Γöé
+      Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ BEGIN TRANSACTION                       Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ BEGIN TRANSACTION
+      Γöé                                                Γöé
+      Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ SELECT * FROM incidents                 Γöé
+      Γöé        WHERE id = $1 FOR UPDATE                Γöé
+      Γöé        (Acquires Row Lock)                     Γöé
+      Γöé                                                Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ SELECT * FROM incidents
+      Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ SELECT * FROM drivers                   Γöé        WHERE id = $1 FOR UPDATE
+      Γöé        WHERE id = $2 FOR UPDATE                Γöé        (BLOCKED - WAITING FOR LOCK)
+      Γöé        (Acquires Driver Lock)                  Γöé        Γöå
+      Γöé                                                Γöé        Γöå
+      Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ Status == 'available' [PASS]            Γöé        Γöå
+      Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ UPDATE incidents SET status='assigned'  Γöé        Γöå
+      Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ UPDATE drivers SET status='busy'        Γöé        Γöå
+      Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ COMMIT TRANSACTION                      Γöé        Γöå
+      Γöé        (Releases Locks)                        Γöé        Γöå
+      Γû╝                                                Γöé        Γû╝
+   200 OK                                              Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ (Unblocked, Reads Locked Row)
+                                                       Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ Status == 'busy' [FAIL]
+                                                       Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ ROLLBACK TRANSACTION
+                                                       Γû╝
                                                     409 Conflict: AMBULANCE_UNAVAILABLE
 ```
 
 #### How the Implementation Works:
+
 1. **Pessimistic Locking**: `trx("incidents").where({ id }).forUpdate().first()` locks the incident. If already assigned (`status !== 'reported' || driver_id !== null`), it immediately aborts with `409 INCIDENT_ALREADY_ASSIGNED`.
 2. **Resource Locking**: `trx("drivers").where({ id }).forUpdate().first()` and `trx("vehicles").where({ id }).forUpdate().first()` exclusively lock the target driver and vehicle.
 3. **Double-Check Invariant**: Verifies `driver.status === 'available'`, `driver.missions_active === 0`, and checks that no other active incident has this driver or vehicle bound.
 4. **Atomic Mutation**: Updates the incident, updates the driver (`status = 'busy'`, `missions_active = missions_active + 1`), updates the vehicle (`status = 'busy'`), and records an immutable audit entry in `incident_events`.
 5. **Post-Commit Emission**: WebSockets (`incident:assigned`, `driver:status`, `fleet:updated`) and persistent notifications are emitted **only after the database transaction successfully commits**.
 
-### 📍 Real-Time GPS Tracking & Live Tactical Map
+### ≡ƒôì Real-Time GPS Tracking & Live Tactical Map
+
 - **High-Accuracy Beacon**: The driver console captures device coordinates using `navigator.geolocation.watchPosition` with `{ enableHighAccuracy: true, maximumAge: 5000 }`.
 - **Telemetry Ingestion**: Dispatches `POST /api/drivers/me/location`, updating `drivers.location_lat`, `drivers.location_lng`, `drivers.heading`, and appending a historical record to `driver_locations`.
 - **WebSocket Streaming**: Emits `driver:location` with heading and ISO timestamp to dispatchers, admins, and the citizen assigned to that specific mission.
 - **Client Throttling**: Frontend `SocketProvider` enforces `LOCATION_THROTTLE_MS = 2000` to prevent redundant React re-renders while keeping the Leaflet map smoothly animated.
 - **Leaflet Tactical Map**: Features custom OKLCH priority markers, pulsing emergency alert rings, heading-rotated ambulance SVGs (`transform: rotate(${heading}deg)`), and hospital markers.
 
-### ⚡ Bi-Directional WebSocket Telemetry
+### ΓÜí Bi-Directional WebSocket Telemetry
+
 - **Handshake Authentication**: Socket.IO connections require a valid JWT passed in `socket.handshake.auth.token`, verified via `verifyAccess()`.
 - **Room Isolation**: Sockets automatically join role-scoped rooms (`role:dispatcher`, `role:admin`, `role:driver`, `role:citizen`) and user-scoped rooms (`user:<userId>`).
 - **Targeted Dispatch**: Citizens only receive GPS coordinates and status updates for the ambulance assigned to their specific incident.
 
-### 🔔 Scoped Real-Time Notification System
+### ≡ƒöö Scoped Real-Time Notification System
+
 - **Persistence & Delivery**: Every notification is stored in the PostgreSQL `notifications` table and pushed directly to the recipient's socket room (`user:${userId}`).
 - **Role Broadcasts**: System-wide notifications (`notifyRole`) create persistent database rows for all users matching that role and broadcast to the role channel.
 - **Inbox Management**: Dedicated endpoints allow users to fetch notifications, mark single items as read, or mark all as read.
 
-### 🔐 Authentication & Role-Based Access Control (RBAC)
+### ≡ƒöÉ Authentication & Role-Based Access Control (RBAC)
+
 - **Dual-Token JWT**:
   - **Access Token**: Short-lived (15 minutes), stateless signature containing `{ sub, role, email }`.
   - **Refresh Token**: Long-lived (30 days), stored securely and verified against the database.
@@ -212,8 +221,10 @@ Dispatcher A (Thread 1)                          Dispatcher B (Thread 2)
 - **Brute-Force Throttle**: Dedicated `express-rate-limit` guard on `/api/auth/*` restricting clients to **10 requests per minute**.
 - **Server-Side Role Guard**: `requireRole('admin', 'dispatcher')` strictly enforces API boundaries regardless of client-side routing.
 
-### 🛡️ Runtime Validation (Zod vs TypeScript)
+### ≡ƒ¢í∩╕Å Runtime Validation (Zod vs TypeScript)
+
 While TypeScript guarantees type safety during compilation, it is completely erased at runtime. ResQ uses **Zod** as a zero-trust runtime perimeter on both backend and frontend:
+
 - Strips unauthorized unexpected fields from payloads.
 - Enforces strict UUID schemas on path parameters and entity IDs.
 - Validates international E.164 phone formats using regex: `/^\+?[0-9\s\-()]{7,20}$/`.
@@ -221,94 +232,95 @@ While TypeScript guarantees type safety during compilation, it is completely era
 
 ---
 
-## 🗄️ Database Architecture
+## ≡ƒùä∩╕Å Database Architecture
 
 ResQ utilizes **PostgreSQL 16** managed through **Knex.js** migrations with UUID primary keys (`pgcrypto` extension) and relational constraints.
 
 ```
-                           ┌──────────────────────────────┐
-                           │            users             │
-                           ├──────────────────────────────┤
-                           │ id (UUID, PK)                │
-                           │ email (VARCHAR, UNIQUE)      │
-                           │ password_hash (VARCHAR)      │
-                           │ name (VARCHAR)               │
-                           │ phone (VARCHAR)              │
-                           │ role (ENUM)                  │
-                           │ created_at / updated_at      │
-                           └──────────────┬───────────────┘
-                                          │
-                  ┌───────────────────────┴───────────────────────┐
-                  │ 1:1 (user_id)                                 │ 1:N (user_id)
-                  ▼                                               ▼
-┌──────────────────────────────────┐            ┌──────────────────────────────────┐
-│             drivers              │            │          notifications           │
-├──────────────────────────────────┤            ├──────────────────────────────────┤
-│ id (UUID, PK)                    │            │ id (UUID, PK)                    │
-│ user_id (UUID, FK -> users)      │            │ user_id (UUID, FK -> users)      │
-│ vehicle_id (UUID, FK -> vehicles)│            │ kind (VARCHAR)                   │
-│ call_sign (VARCHAR, UNIQUE)      │            │ title (VARCHAR)                  │
-│ rating (DECIMAL, 3,2)            │            │ body (TEXT)                      │
-│ missions_completed (INT)         │            │ data (JSONB)                     │
-│ missions_active (INT)            │            │ read_at (TIMESTAMP)              │
-│ avg_response_sec (INT)           │            │ created_at (TIMESTAMP)           │
-│ status (VARCHAR)                 │            └──────────────────────────────────┘
-│ location_lat / location_lng      │
-│ heading (DECIMAL, 6,2)           │
-│ last_ping_at (TIMESTAMP)         │
-└───────────────┬──────────────────┘
-                │
-                ├──────────────────────────────────────────────────┐
-                │ 1:N (driver_id)                                  │ 1:1 (vehicle_id)
-                ▼                                                  ▼
-┌──────────────────────────────────┐            ┌──────────────────────────────────┐
-│         driver_locations         │            │             vehicles             │
-├──────────────────────────────────┤            ├──────────────────────────────────┤
-│ id (BIGSERIAL, PK)               │            │ id (UUID, PK)                    │
-│ driver_id (UUID, FK -> drivers)  │            │ plate (VARCHAR, UNIQUE)          │
-│ lat (DECIMAL, 10,6)              │            │ model (VARCHAR)                  │
-│ lng (DECIMAL, 10,6)              │            │ type (ALS | BLS | ICU | MICU)    │
-│ heading (DECIMAL, 6,2)           │            │ status (VARCHAR)                 │
-│ created_at (TIMESTAMP)           │            │ created_at / updated_at          │
-└──────────────────────────────────┘            └──────────────────────────────────┘
-                ▲
-                │ 1:N (driver_id)
-┌───────────────┴──────────────────────────────────────────────────────────────────┐
-│                                    incidents                                     │
-├──────────────────────────────────────────────────────────────────────────────────┤
-│ id (UUID, PK)                                                                    │
-│ code (VARCHAR, UNIQUE) — e.g. INC-2151                                           │
-│ priority (P1 | P2 | P3 | P4)                                                     │
-│ type (cardiac | trauma | stroke | respiratory | obstetric | pediatric | ...)     │
-│ status (reported | assigned | accepted | en_route | arrived | loaded | ...)      │
-│ lat / lng (DECIMAL, 10,6)                                                        │
-│ address (VARCHAR) · notes (TEXT)                                                 │
-│ citizen_name (VARCHAR) · citizen_phone (VARCHAR)                                 │
-│ citizen_user_id (UUID, FK -> users)                                              │
-│ driver_id (UUID, FK -> drivers)                                                  │
-│ vehicle_id (UUID, FK -> vehicles)                                                │
-│ hospital_id (UUID, FK -> hospitals)                                              │
-│ sla_seconds (INT)                                                                │
-│ reported_at / assigned_at / completed_at                                         │
-└───────────────┬──────────────────────────────────────────────────────────────────┘
-                │
-                ├──────────────────────────────────┐
-                │ 1:N (incident_id)                │ N:1 (hospital_id)
-                ▼                                  ▼
-┌──────────────────────────────────┐    ┌──────────────────────────────────┐
-│         incident_events          │    │            hospitals             │
-├──────────────────────────────────┤    ├──────────────────────────────────┤
-│ id (BIGSERIAL, PK)               │    │ id (UUID, PK)                    │
-│ incident_id (UUID, FK)           │    │ name (VARCHAR)                   │
-│ status (VARCHAR)                 │    │ lat / lng (DECIMAL, 10,6)        │
-│ actor_id (UUID)                  │    │ beds (INT)                       │
-│ actor_name (VARCHAR)             │    │ beds_available (INT)             │
-│ note (TEXT)                      │    │ created_at / updated_at          │
-│ created_at (TIMESTAMP)           │    └──────────────────────────────────┘
-└──────────────────────────────────┘
+                           ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+                           Γöé            users             Γöé
+                           Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+                           Γöé id (UUID, PK)                Γöé
+                           Γöé email (VARCHAR, UNIQUE)      Γöé
+                           Γöé password_hash (VARCHAR)      Γöé
+                           Γöé name (VARCHAR)               Γöé
+                           Γöé phone (VARCHAR)              Γöé
+                           Γöé role (ENUM)                  Γöé
+                           Γöé created_at / updated_at      Γöé
+                           ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+                                          Γöé
+                  ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+                  Γöé 1:1 (user_id)                                 Γöé 1:N (user_id)
+                  Γû╝                                               Γû╝
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ            ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé             drivers              Γöé            Γöé          notifications           Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ            Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé id (UUID, PK)                    Γöé            Γöé id (UUID, PK)                    Γöé
+Γöé user_id (UUID, FK -> users)      Γöé            Γöé user_id (UUID, FK -> users)      Γöé
+Γöé vehicle_id (UUID, FK -> vehicles)Γöé            Γöé kind (VARCHAR)                   Γöé
+Γöé call_sign (VARCHAR, UNIQUE)      Γöé            Γöé title (VARCHAR)                  Γöé
+Γöé rating (DECIMAL, 3,2)            Γöé            Γöé body (TEXT)                      Γöé
+Γöé missions_completed (INT)         Γöé            Γöé data (JSONB)                     Γöé
+Γöé missions_active (INT)            Γöé            Γöé read_at (TIMESTAMP)              Γöé
+Γöé avg_response_sec (INT)           Γöé            Γöé created_at (TIMESTAMP)           Γöé
+Γöé status (VARCHAR)                 Γöé            ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+Γöé location_lat / location_lng      Γöé
+Γöé heading (DECIMAL, 6,2)           Γöé
+Γöé last_ping_at (TIMESTAMP)         Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+                Γöé
+                Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+                Γöé 1:N (driver_id)                                  Γöé 1:1 (vehicle_id)
+                Γû╝                                                  Γû╝
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ            ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé         driver_locations         Γöé            Γöé             vehicles             Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ            Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé id (BIGSERIAL, PK)               Γöé            Γöé id (UUID, PK)                    Γöé
+Γöé driver_id (UUID, FK -> drivers)  Γöé            Γöé plate (VARCHAR, UNIQUE)          Γöé
+Γöé lat (DECIMAL, 10,6)              Γöé            Γöé model (VARCHAR)                  Γöé
+Γöé lng (DECIMAL, 10,6)              Γöé            Γöé type (ALS | BLS | ICU | MICU)    Γöé
+Γöé heading (DECIMAL, 6,2)           Γöé            Γöé status (VARCHAR)                 Γöé
+Γöé created_at (TIMESTAMP)           Γöé            Γöé created_at / updated_at          Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ            ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+                Γû▓
+                Γöé 1:N (driver_id)
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé                                    incidents                                     Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé id (UUID, PK)                                                                    Γöé
+Γöé code (VARCHAR, UNIQUE) ΓÇö e.g. INC-2151                                           Γöé
+Γöé priority (P1 | P2 | P3 | P4)                                                     Γöé
+Γöé type (cardiac | trauma | stroke | respiratory | obstetric | pediatric | ...)     Γöé
+Γöé status (reported | assigned | accepted | en_route | arrived | loaded | ...)      Γöé
+Γöé lat / lng (DECIMAL, 10,6)                                                        Γöé
+Γöé address (VARCHAR) ┬╖ notes (TEXT)                                                 Γöé
+Γöé citizen_name (VARCHAR) ┬╖ citizen_phone (VARCHAR)                                 Γöé
+Γöé citizen_user_id (UUID, FK -> users)                                              Γöé
+Γöé driver_id (UUID, FK -> drivers)                                                  Γöé
+Γöé vehicle_id (UUID, FK -> vehicles)                                                Γöé
+Γöé hospital_id (UUID, FK -> hospitals)                                              Γöé
+Γöé sla_seconds (INT)                                                                Γöé
+Γöé reported_at / assigned_at / completed_at                                         Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+                Γöé
+                Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+                Γöé 1:N (incident_id)                Γöé N:1 (hospital_id)
+                Γû╝                                  Γû╝
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ    ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé         incident_events          Γöé    Γöé            hospitals             Γöé
+Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ    Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ
+Γöé id (BIGSERIAL, PK)               Γöé    Γöé id (UUID, PK)                    Γöé
+Γöé incident_id (UUID, FK)           Γöé    Γöé name (VARCHAR)                   Γöé
+Γöé status (VARCHAR)                 Γöé    Γöé lat / lng (DECIMAL, 10,6)        Γöé
+Γöé actor_id (UUID)                  Γöé    Γöé beds (INT)                       Γöé
+Γöé actor_name (VARCHAR)             Γöé    Γöé beds_available (INT)             Γöé
+Γöé note (TEXT)                      Γöé    Γöé created_at / updated_at          Γöé
+Γöé created_at (TIMESTAMP)           Γöé    ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
 ```
 
 ### Key Relational Constraints & Indexes:
+
 - `drivers_vehicle_id_unique`: Partial unique index (`WHERE vehicle_id IS NOT NULL`) guaranteeing one ambulance cannot be driven by two active drivers.
 - `drivers_user_id_unique`: Strict 1-to-1 mapping between a driver profile and authentication account.
 - `incidents(status, priority)`: Composite index optimizing high-frequency dispatcher filtering.
@@ -316,72 +328,72 @@ ResQ utilizes **PostgreSQL 16** managed through **Knex.js** migrations with UUID
 
 ---
 
-## 🏗️ System Architecture
+## ≡ƒÅù∩╕Å System Architecture
 
 ResQ is built as a cohesive full-stack architecture running React 19 on Vite & Nitro paired with an Express and Socket.IO core.
 
 ```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   CLIENT TIER (BROWSER)                                │
-│                                                                                        │
-│  Citizen Portal            Dispatcher Console         Driver Console      Admin Panel  │
-│    (/citizen)                  (/dispatch)               (/driver)          (/admin)   │
-│                                                                                        │
-│  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
-│  │                    TanStack React Query Cache (Server State)                     │  │
-│  └────────────────────────────────────────┬─────────────────────────────────────────┘  │
-│                     ▲                     │                    ▲                       │
-│      Optimistic UI  │                     │ REST (Native fetch)│ Socket Telemetry      │
-│      Invalidations  │                     ▼                    │ Listeners             │
-│  ┌──────────────────┴──────────────────────────────────────────┴─────────────────────┐  │
-│  │                     SocketProvider & HTTP Client Middleware                      │  │
-│  └────────────────────────────────────────┬─────────────────────────────────────────┘  │
-└───────────────────────────────────────────┼────────────────────────────────────────────┘
-                                            │ HTTP / WebSockets (Port 4000)
-                                            ▼
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   API & TELEMETRY TIER                                 │
-│                                                                                        │
-│   Node.js HTTP Server ─── Express App Factory (app.js) ─── Socket.IO Server (socket.js) │
-│                                   │                                                    │
-│   ┌───────────────────────────────┴────────────────────────────────┐                   │
-│   │                       Global Middleware Chain                  │                   │
-│   │  Helmet (Security Headers) · CORS · Compression · Pino Logger  │                   │
-│   │  express-rate-limit (300 req/min global, 10 req/min on /auth)  │                   │
-│   └───────────────────────────────┬────────────────────────────────┘                   │
-│                                   ▼                                                    │
-│   ┌────────────────────────────────────────────────────────────────┐                   │
-│   │                      Domain Feature Modules                    │                   │
-│   │  /auth · /users · /drivers · /vehicles · /hospitals            │                   │
-│   │  /incidents (State Machine) · /dispatch (Scoring) · /analytics │                   │
-│   └───────────────┬────────────────────────────────┬───────────────┘                   │
-│                   │                                │                                   │
-│                   ▼                                ▼                                   │
-│   ┌───────────────────────────────┐┌───────────────────────────────┐                   │
-│   │  authenticate & requireRole   ││       validate(ZodSchema)     │                   │
-│   └───────────────┬───────────────┘└───────────────┬───────────────┘                   │
-│                   └───────────────┬────────────────┘                                   │
-│                                   ▼                                                    │
-│   ┌────────────────────────────────────────────────────────────────┐                   │
-│   │                     Transaction Manager (ACID)                 │                   │
-│   │               Knex.js Connection Pool (min: 2, max: 10)        │                   │
-│   │               SELECT ... FOR UPDATE (Row Locking)              │                   │
-│   └───────────────────────────────┬────────────────────────────────┘                   │
-└───────────────────────────────────┼────────────────────────────────────────────────────┘
-                                    │ SQL (Port 5432)
-                                    ▼
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                     DATA TIER                                          │
-│                                                                                        │
-│                           PostgreSQL 16 Relational Engine                              │
-│            Tables: users, vehicles, drivers, driver_locations, hospitals,              │
-│                    incidents, incident_events, notifications, audit_logs               │
-└────────────────────────────────────────────────────────────────────────────────────────┘
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé                                   CLIENT TIER (BROWSER)                                Γöé
+Γöé                                                                                        Γöé
+Γöé  Citizen Portal            Dispatcher Console         Driver Console      Admin Panel  Γöé
+Γöé    (/citizen)                  (/dispatch)               (/driver)          (/admin)   Γöé
+Γöé                                                                                        Γöé
+Γöé  ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ  Γöé
+Γöé  Γöé                    TanStack React Query Cache (Server State)                     Γöé  Γöé
+Γöé  ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ  Γöé
+Γöé                     Γû▓                     Γöé                    Γû▓                       Γöé
+Γöé      Optimistic UI  Γöé                     Γöé REST (Native fetch)Γöé Socket Telemetry      Γöé
+Γöé      Invalidations  Γöé                     Γû╝                    Γöé Listeners             Γöé
+Γöé  ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ  Γöé
+Γöé  Γöé                     SocketProvider & HTTP Client Middleware                      Γöé  Γöé
+Γöé  ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ  Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+                                            Γöé HTTP / WebSockets (Port 4000)
+                                            Γû╝
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé                                   API & TELEMETRY TIER                                 Γöé
+Γöé                                                                                        Γöé
+Γöé   Node.js HTTP Server ΓöÇΓöÇΓöÇ Express App Factory (app.js) ΓöÇΓöÇΓöÇ Socket.IO Server (socket.js) Γöé
+Γöé                                   Γöé                                                    Γöé
+Γöé   ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ                   Γöé
+Γöé   Γöé                       Global Middleware Chain                  Γöé                   Γöé
+Γöé   Γöé  Helmet (Security Headers) ┬╖ CORS ┬╖ Compression ┬╖ Pino Logger  Γöé                   Γöé
+Γöé   Γöé  express-rate-limit (300 req/min global, 10 req/min on /auth)  Γöé                   Γöé
+Γöé   ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ                   Γöé
+Γöé                                   Γû╝                                                    Γöé
+Γöé   ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ                   Γöé
+Γöé   Γöé                      Domain Feature Modules                    Γöé                   Γöé
+Γöé   Γöé  /auth ┬╖ /users ┬╖ /drivers ┬╖ /vehicles ┬╖ /hospitals            Γöé                   Γöé
+Γöé   Γöé  /incidents (State Machine) ┬╖ /dispatch (Scoring) ┬╖ /analytics Γöé                   Γöé
+Γöé   ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ                   Γöé
+Γöé                   Γöé                                Γöé                                   Γöé
+Γöé                   Γû╝                                Γû╝                                   Γöé
+Γöé   ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ                   Γöé
+Γöé   Γöé  authenticate & requireRole   ΓöéΓöé       validate(ZodSchema)     Γöé                   Γöé
+Γöé   ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ                   Γöé
+Γöé                   ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ                                   Γöé
+Γöé                                   Γû╝                                                    Γöé
+Γöé   ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ                   Γöé
+Γöé   Γöé                     Transaction Manager (ACID)                 Γöé                   Γöé
+Γöé   Γöé               Knex.js Connection Pool (min: 2, max: 10)        Γöé                   Γöé
+Γöé   Γöé               SELECT ... FOR UPDATE (Row Locking)              Γöé                   Γöé
+Γöé   ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ                   Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+                                    Γöé SQL (Port 5432)
+                                    Γû╝
+ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+Γöé                                     DATA TIER                                          Γöé
+Γöé                                                                                        Γöé
+Γöé                           PostgreSQL 16 Relational Engine                              Γöé
+Γöé            Tables: users, vehicles, drivers, driver_locations, hospitals,              Γöé
+Γöé                    incidents, incident_events, notifications, audit_logs               Γöé
+ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
 ```
 
 ---
 
-## 🔄 End-to-End Mission Workflow
+## ≡ƒöä End-to-End Mission Workflow
 
 ```mermaid
 sequenceDiagram
@@ -454,134 +466,142 @@ sequenceDiagram
 
 ---
 
-## 🧠 Important Engineering Decisions
+## ≡ƒºá Important Engineering Decisions
 
 ### 1. PostgreSQL vs NoSQL
+
 - **Decision:** Use PostgreSQL with relational constraints and transactional integrity.
 - **Why:** Emergency dispatch requires immediate consistency. Double-booking an ambulance or dropping an assignment due to eventual consistency is unacceptable in medical emergencies.
 - **Trade-off:** Requires explicit schema migrations and connection pool management compared to schema-less document databases.
 
 ### 2. Pessimistic Row Locking (`SELECT FOR UPDATE`) vs Optimistic Locking
+
 - **Decision:** Execute assignments inside an explicit database transaction using `knex("incidents").forUpdate()` and `knex("drivers").forUpdate()`.
 - **Why:** High contention on available ambulances during disaster scenarios causes high abort rates with optimistic version checking. Pessimistic locking cleanly serializes concurrent dispatchers, rejecting the second attempt cleanly with HTTP 409.
 - **Trade-off:** Row locks hold connections open slightly longer; mitigated by keeping transactions strictly constrained to validation, updates, and inserts without external network I/O.
 
 ### 3. Native Dual-Token JWT with In-Flight Request Queueing
+
 - **Decision:** 15-minute access tokens with 30-day refresh tokens managed by an in-memory client queue.
-- **Why:** Short-lived tokens minimize vulnerability windows. The in-flight queue ensures that when 5 concurrent API requests fail with 401 simultaneously on token expiry, only *one* network request is made to `/auth/refresh`, and all pending requests replay seamlessly upon success.
+- **Why:** Short-lived tokens minimize vulnerability windows. The in-flight queue ensures that when 5 concurrent API requests fail with 401 simultaneously on token expiry, only _one_ network request is made to `/auth/refresh`, and all pending requests replay seamlessly upon success.
 - **Trade-off:** In-memory tokens reset on hard browser reloads, requiring an initial session restoration handshake.
 
 ### 4. Knex.js Query Builder vs Heavy ORMs (Prisma / TypeORM)
+
 - **Decision:** Built on Knex.js with explicit SQL statements.
 - **Why:** Complete control over raw PostgreSQL syntax (`FOR UPDATE`, `GREATEST(missions_active - 1, 0)`, `EXTRACT(EPOCH FROM ...)`), predictable connection pooling, and zero hidden query generation overhead.
 - **Trade-off:** Requires writing manual schema migrations and normalizer utilities.
 
 ### 5. Haversine Formula with Static Speed vs External Routing APIs
+
 - **Decision:** Server calculates direct spherical distance using the Haversine formula assuming an average urban emergency response speed of 42 km/h.
 - **Why:** Guarantees sub-millisecond calculation latency with zero external API rate limits, costs, or third-party outages during incident triage.
 - **Trade-off:** Does not account for real-time traffic jams, one-way streets, or road network topography.
 
 ---
 
-## 📊 Incident State Machine
+## ≡ƒôè Incident State Machine
 
 Incident progression is governed by an authoritative backend transition graph defined in `server/src/modules/incidents/constants.js`. Jumps between non-adjacent states or modifications to terminal states are rejected with **409 Conflict**.
 
 ```
-                           ┌──────────────┐
-                           │   reported   │
-                           └──────┬───────┘
-                                  │
-                                  ▼
-                           ┌──────────────┐
-                           │   assigned   │
-                           └──────┬───────┘
-                                  │
-                                  ▼
-                           ┌──────────────┐
-                           │   accepted   │
-                           └──────┬───────┘
-                                  │
-                                  ▼
-                           ┌──────────────┐
-               ┌───────────┤   en_route   ├───────────┐
-               │           └──────┬───────┘           │
-               │                  │                   │
-               │                  ▼                   │
-               │           ┌──────────────┐           │
-               │           │   arrived    │           │
-               │           └──────┬───────┘           │
-               │                  │                   │
-               │                  ▼                   │
-               │           ┌──────────────┐           │
-               │           │patient_loaded│           │
-               │           └──────┬───────┘           │
-               │                  │                   │
-               │                  ▼                   │
-               │           ┌──────────────┐           │
-               │           │ at_hospital  │           │
-               │           └──────┬───────┘           │
-               │                  │                   │
-               ▼                  ▼                   ▼
-      ┌─────────────────┐  ┌──────────────┐  ┌─────────────────┐
-      │    cancelled    │  │  completed   │  │    cancelled    │
-      │ (TERMINAL STATE)│  │(TERMINAL ST.)│  │ (TERMINAL STATE)│
-      └─────────────────┘  └──────────────┘  └─────────────────┘
+                           ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+                           Γöé   reported   Γöé
+                           ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+                                  Γöé
+                                  Γû╝
+                           ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+                           Γöé   assigned   Γöé
+                           ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+                                  Γöé
+                                  Γû╝
+                           ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+                           Γöé   accepted   Γöé
+                           ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+                                  Γöé
+                                  Γû╝
+                           ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+               ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ   en_route   Γö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+               Γöé           ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ           Γöé
+               Γöé                  Γöé                   Γöé
+               Γöé                  Γû╝                   Γöé
+               Γöé           ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ           Γöé
+               Γöé           Γöé   arrived    Γöé           Γöé
+               Γöé           ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ           Γöé
+               Γöé                  Γöé                   Γöé
+               Γöé                  Γû╝                   Γöé
+               Γöé           ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ           Γöé
+               Γöé           Γöépatient_loadedΓöé           Γöé
+               Γöé           ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ           Γöé
+               Γöé                  Γöé                   Γöé
+               Γöé                  Γû╝                   Γöé
+               Γöé           ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ           Γöé
+               Γöé           Γöé at_hospital  Γöé           Γöé
+               Γöé           ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ           Γöé
+               Γöé                  Γöé                   Γöé
+               Γû╝                  Γû╝                   Γû╝
+      ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ  ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ  ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+      Γöé    cancelled    Γöé  Γöé  completed   Γöé  Γöé    cancelled    Γöé
+      Γöé (TERMINAL STATE)Γöé  Γöé(TERMINAL ST.)Γöé  Γöé (TERMINAL STATE)Γöé
+      ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ  ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ  ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
 ```
 
 ### State Transition & Fleet Synchronization Rules:
 
-| From State | Allowed Next States | Driver Status Set To | Vehicle Status Set To | Active Mission Counter |
-| :--- | :--- | :--- | :--- | :--- |
-| `reported` | `assigned`, `cancelled` | `busy` | `busy` | `+1` (on assign) |
-| `assigned` | `accepted`, `cancelled` | `busy` | `busy` | Unchanged |
-| `accepted` | `en_route`, `cancelled` | `busy` | `busy` | Unchanged |
-| `en_route` | `arrived`, `cancelled` | `en_route` | `en_route` | Unchanged |
-| `arrived` | `patient_loaded`, `cancelled` | `busy` | `busy` | Unchanged |
-| `patient_loaded` | `at_hospital`, `cancelled` | `busy` | `busy` | Unchanged |
-| `at_hospital` | `completed`, `cancelled` | `at_hospital` | `at_hospital` | Unchanged |
-| **`completed`** | **None (Terminal)** | `available` | `available` | `GREATEST(count - 1, 0)` & `completed++` |
-| **`cancelled`** | **None (Terminal)** | `available` | `available` | `GREATEST(count - 1, 0)` |
+| From State       | Allowed Next States           | Driver Status Set To | Vehicle Status Set To | Active Mission Counter                   |
+| :--------------- | :---------------------------- | :------------------- | :-------------------- | :--------------------------------------- |
+| `reported`       | `assigned`, `cancelled`       | `busy`               | `busy`                | `+1` (on assign)                         |
+| `assigned`       | `accepted`, `cancelled`       | `busy`               | `busy`                | Unchanged                                |
+| `accepted`       | `en_route`, `cancelled`       | `busy`               | `busy`                | Unchanged                                |
+| `en_route`       | `arrived`, `cancelled`        | `en_route`           | `en_route`            | Unchanged                                |
+| `arrived`        | `patient_loaded`, `cancelled` | `busy`               | `busy`                | Unchanged                                |
+| `patient_loaded` | `at_hospital`, `cancelled`    | `busy`               | `busy`                | Unchanged                                |
+| `at_hospital`    | `completed`, `cancelled`      | `at_hospital`        | `at_hospital`         | Unchanged                                |
+| **`completed`**  | **None (Terminal)**           | `available`          | `available`           | `GREATEST(count - 1, 0)` & `completed++` |
+| **`cancelled`**  | **None (Terminal)**           | `available`          | `available`           | `GREATEST(count - 1, 0)`                 |
 
 ---
 
-## 📈 Reliability & Failure Handling
+## ≡ƒôê Reliability & Failure Handling
 
-| Failure Mode | Detection Point | Handling Strategy & System Behavior | Status Code |
-| :--- | :--- | :--- | :---: |
-| **Double Dispatch Contention** | `incidents/routes.js` | Row lock detects incident is assigned or driver is busy; transaction rolls back. UI displays toast alert and refreshes fleet queries. | `409 Conflict` |
-| **Expired Access Token** | `middleware/auth.js` | API client intercepts 401, pauses queue, refreshes via `/api/auth/refresh`, and transparently replays original request. | `401 Unauthorized` |
-| **Invalid State Transition** | `incidents/routes.js` | Validated against `ALLOWED_TRANSITIONS`; rejects out-of-order jumps (e.g. `reported` &rarr; `completed`). | `409 Conflict` |
-| **Tampered Input Payload** | `utils/validate.js` | Zod schema rejects malformed UUIDs, invalid coordinates, or bad enums with flattened field messages. | `400 Bad Request` |
-| **Insufficient Privilege** | `middleware/auth.js` | Role guard rejects unauthorized role operations (e.g. Citizen calling Dispatcher API). | `403 Forbidden` |
-| **Database Disconnection** | `/health` route | `SELECT 1` ping fails; health endpoint returns unhealthy; container orchestrators trigger restart. | `503 Service Unavailable` |
-| **Socket Disconnection** | `src/lib/socket.ts` | Exponential backoff auto-reconnect (5 attempts, 2s to 10s delay). Resubscribes with dynamic token. | Transparent |
+| Failure Mode                   | Detection Point       | Handling Strategy & System Behavior                                                                                                   |        Status Code        |
+| :----------------------------- | :-------------------- | :------------------------------------------------------------------------------------------------------------------------------------ | :-----------------------: |
+| **Double Dispatch Contention** | `incidents/routes.js` | Row lock detects incident is assigned or driver is busy; transaction rolls back. UI displays toast alert and refreshes fleet queries. |      `409 Conflict`       |
+| **Expired Access Token**       | `middleware/auth.js`  | API client intercepts 401, pauses queue, refreshes via `/api/auth/refresh`, and transparently replays original request.               |    `401 Unauthorized`     |
+| **Invalid State Transition**   | `incidents/routes.js` | Validated against `ALLOWED_TRANSITIONS`; rejects out-of-order jumps (e.g. `reported` &rarr; `completed`).                             |      `409 Conflict`       |
+| **Tampered Input Payload**     | `utils/validate.js`   | Zod schema rejects malformed UUIDs, invalid coordinates, or bad enums with flattened field messages.                                  |     `400 Bad Request`     |
+| **Insufficient Privilege**     | `middleware/auth.js`  | Role guard rejects unauthorized role operations (e.g. Citizen calling Dispatcher API).                                                |      `403 Forbidden`      |
+| **Database Disconnection**     | `/health` route       | `SELECT 1` ping fails; health endpoint returns unhealthy; container orchestrators trigger restart.                                    | `503 Service Unavailable` |
+| **Socket Disconnection**       | `src/lib/socket.ts`   | Exponential backoff auto-reconnect (5 attempts, 2s to 10s delay). Resubscribes with dynamic token.                                    |        Transparent        |
 
 ---
 
-## ⏱️ SLA Tracking & Performance Analytics
+## ΓÅ▒∩╕Å SLA Tracking & Performance Analytics
 
 Every reported emergency is bound to a strict Service Level Agreement based on clinical triage severity:
 
-| Priority | Description | Target Response SLA | Stored Column (`incidents`) |
-| :---: | :--- | :---: | :---: |
-| **P1** | Critical / Immediate Life Threat (e.g. Cardiac Arrest, Severe Trauma) | **8 Minutes (480s)** | `sla_seconds = 480` |
-| **P2** | Urgent / Emergent (e.g. Suspected Stroke, Severe Respiratory) | **15 Minutes (900s)** | `sla_seconds = 900` |
-| **P3** | Semi-Urgent (e.g. Controlled Bleeding, Pediatric Fracture) | **30 Minutes (1800s)** | `sla_seconds = 1800` |
-| **P4** | Non-Urgent / Routine Medical Transport | **60 Minutes (3600s)** | `sla_seconds = 3600` |
+| Priority | Description                                                           |  Target Response SLA   | Stored Column (`incidents`) |
+| :------: | :-------------------------------------------------------------------- | :--------------------: | :-------------------------: |
+|  **P1**  | Critical / Immediate Life Threat (e.g. Cardiac Arrest, Severe Trauma) |  **8 Minutes (480s)**  |     `sla_seconds = 480`     |
+|  **P2**  | Urgent / Emergent (e.g. Suspected Stroke, Severe Respiratory)         | **15 Minutes (900s)**  |     `sla_seconds = 900`     |
+|  **P3**  | Semi-Urgent (e.g. Controlled Bleeding, Pediatric Fracture)            | **30 Minutes (1800s)** |    `sla_seconds = 1800`     |
+|  **P4**  | Non-Urgent / Routine Medical Transport                                | **60 Minutes (3600s)** |    `sla_seconds = 3600`     |
 
 ### SLA Compliance Metric Engine
+
 The `/api/analytics/overview` endpoint calculates operational health in real-time directly in SQL:
+
 ```sql
 AVG(EXTRACT(EPOCH FROM (assigned_at - reported_at))) AS avg_resp_seconds,
 COUNT(*) FILTER (WHERE EXTRACT(EPOCH FROM (assigned_at - reported_at)) <= sla_seconds) AS sla_met,
 COUNT(*) AS total_with_sla
 ```
+
 Calculates compliance as $\frac{\text{sla\_met}}{\text{total\_with\_sla}} \times 100\%$ across selectable time horizons (`24h`, `7d`, `30d`, `90d`).
 
 ---
 
-## 📝 Auditability & Mission Timelines
+## ≡ƒô¥ Auditability & Mission Timelines
 
 ResQ maintains two separate, purpose-built auditing mechanisms:
 
@@ -595,191 +615,192 @@ ResQ maintains two separate, purpose-built auditing mechanisms:
 
 ---
 
-## 🧰 Tech Stack
+## ≡ƒº░ Tech Stack
 
-| Domain | Technology | Purpose in ResQ |
-| :--- | :--- | :--- |
-| **Frontend Framework** | **React 19.2** | Modern component rendering with concurrent features and hooks |
-| **Router & Server Engine** | **TanStack Router / Start** | File-based client routing with type-safe route parameters |
-| **Server State Management**| **TanStack Query 5.101** | Query caching, optimistic updates, and WebSocket-driven invalidation |
-| **Mapping & GIS** | **Leaflet 1.9** | Interactive tactical mapping with custom OKLCH markers and rotated ambulance icons |
-| **Styling & UI Kit** | **Tailwind CSS 4.2 + Radix UI** | Responsive dark-mode tactical command dashboard with accessible primitives |
-| **Backend Runtime** | **Node.js 20 LTS (ES Modules)**| Asynchronous backend runtime with native ES module support |
-| **Web Framework** | **Express 4.19** | REST API routing and vertical slice modular architecture |
-| **Database Engine** | **PostgreSQL 16 (PostGIS image)**| Relational persistence, UUID keys, pgcrypto, and row-level locking |
-| **Query Builder** | **Knex.js 3.1** | Parameterized SQL builder, migration management, and connection pooling |
-| **Real-Time WebSockets** | **Socket.IO 4.8** | Authenticated bi-directional event transport and room-based pub/sub |
-| **Authentication** | **JSON Web Tokens + Bcrypt**| Stateless 15m access tokens, 30d refresh tokens, and salted hashing |
-| **Runtime Validation** | **Zod 3.24** | Zero-trust request body, parameter, and query schema validation |
-| **Security & Headers** | **Helmet + CORS + Rate Limit**| Secure HTTP response headers, origin whitelisting, and brute-force throttling |
-| **Logging** | **Pino 9.3 + Morgan** | Structured JSON logging with pino-pretty formatting in development |
-| **Testing** | **Vitest 4.1** | Fast unit and integration testing suite for state machines and concurrency |
-| **Containerization** | **Docker & Docker Compose** | Multi-stage Node Alpine build and orchestrated PostgreSQL/PostGIS stack |
+| Domain                      | Technology                        | Purpose in ResQ                                                                    |
+| :-------------------------- | :-------------------------------- | :--------------------------------------------------------------------------------- |
+| **Frontend Framework**      | **React 19.2**                    | Modern component rendering with concurrent features and hooks                      |
+| **Router & Server Engine**  | **TanStack Router / Start**       | File-based client routing with type-safe route parameters                          |
+| **Server State Management** | **TanStack Query 5.101**          | Query caching, optimistic updates, and WebSocket-driven invalidation               |
+| **Mapping & GIS**           | **Leaflet 1.9**                   | Interactive tactical mapping with custom OKLCH markers and rotated ambulance icons |
+| **Styling & UI Kit**        | **Tailwind CSS 4.2 + Radix UI**   | Responsive dark-mode tactical command dashboard with accessible primitives         |
+| **Backend Runtime**         | **Node.js 20 LTS (ES Modules)**   | Asynchronous backend runtime with native ES module support                         |
+| **Web Framework**           | **Express 4.19**                  | REST API routing and vertical slice modular architecture                           |
+| **Database Engine**         | **PostgreSQL 16 (PostGIS image)** | Relational persistence, UUID keys, pgcrypto, and row-level locking                 |
+| **Query Builder**           | **Knex.js 3.1**                   | Parameterized SQL builder, migration management, and connection pooling            |
+| **Real-Time WebSockets**    | **Socket.IO 4.8**                 | Authenticated bi-directional event transport and room-based pub/sub                |
+| **Authentication**          | **JSON Web Tokens + Bcrypt**      | Stateless 15m access tokens, 30d refresh tokens, and salted hashing                |
+| **Runtime Validation**      | **Zod 3.24**                      | Zero-trust request body, parameter, and query schema validation                    |
+| **Security & Headers**      | **Helmet + CORS + Rate Limit**    | Secure HTTP response headers, origin whitelisting, and brute-force throttling      |
+| **Logging**                 | **Pino 9.3 + Morgan**             | Structured JSON logging with pino-pretty formatting in development                 |
+| **Testing**                 | **Vitest 4.1**                    | Fast unit and integration testing suite for state machines and concurrency         |
+| **Containerization**        | **Docker & Docker Compose**       | Multi-stage Node Alpine build and orchestrated PostgreSQL/PostGIS stack            |
 
 ---
 
-## 📁 Project Structure
+## ≡ƒôü Project Structure
 
 ```
 sentinel-aid-grid-main/
-├── .github/
-│   └── workflows/
-│       └── ci.yml                 # GitHub Actions CI (lint, typecheck, test, build)
-├── public/                        # Static assets & favicons
-├── server/                        # Express + PostgreSQL + Socket.IO Backend
-│   ├── migrations/
-│   │   ├── 20260710_000_init.js   # Core schema: users, vehicles, drivers, incidents, etc.
-│   │   └── 20260814_001_driver_constraints.js # Driver uniqueness & vehicle constraints
-│   ├── seeds/
-│   │   └── 001_seed.js            # Vellore hospitals, ambulance fleet, admin/dispatch accounts
-│   ├── src/
-│   │   ├── middleware/
-│   │   │   ├── audit.js           # Security audit log middleware
-│   │   │   ├── auth.js            # JWT authenticate & requireRole guards
-│   │   │   └── error.js           # Centralized 4-argument error handler & 404 catcher
-│   │   ├── modules/
-│   │   │   ├── analytics/         # KPI summaries & SLA compliance endpoints
-│   │   │   ├── auth/              # Registration, login, silent refresh, /me
-│   │   │   ├── dispatch/          # Multi-factor ambulance recommendation engine
-│   │   │   ├── drivers/           # Driver roster, GPS telemetry ingestion, shift toggle
-│   │   │   ├── hospitals/         # Hospital bed capacity tracking
-│   │   │   ├── incidents/         # Incident CRUD, state machine & row-locked assignment
-│   │   │   ├── notifications/     # Persistent notification store & user inbox
-│   │   │   ├── users/             # Admin staff creation & role management
-│   │   │   └── vehicles/          # Ambulance fleet CRUD
-│   │   ├── utils/
-│   │   │   ├── asyncHandler.js    # Express async route wrapper
-│   │   │   ├── geo.js             # Haversine distance & ETA formulas
-│   │   │   ├── httpError.js       # Custom structured HTTP error class
-│   │   │   ├── jwt.js             # Sign and verify access/refresh tokens
-│   │   │   ├── password.js        # Bcrypt hash and verify utilities
-│   │   │   ├── phone.js           # E.164 international phone number validation
-│   │   │   └── validate.js        # Zod middleware wrapper
-│   │   ├── app.js                 # Express application factory & route mounting
-│   │   ├── config.js              # Environment variable parser with typed defaults
-│   │   ├── db.js                  # Knex PostgreSQL connection pool singleton
-│   │   ├── index.js               # HTTP listener, Socket.IO attachment & graceful shutdown
-│   │   ├── logger.js              # Pino logger configuration
-│   │   └── socket.js              # Socket.IO handshake auth, room setup & event emitters
-│   ├── .dockerignore
-│   ├── .env.example               # Backend environment variable template
-│   ├── Dockerfile                 # Multi-stage production container build
-│   ├── docker-compose.yml         # PostGIS 16 + API orchestration
-│   ├── knexfile.js                # Database connection configuration for Knex CLI
-│   └── package.json               # Backend dependencies & npm scripts
-├── src/                           # React 19 Frontend
-│   ├── __tests__/                 # Vitest test suite
-│   │   ├── auth-context.test.tsx  # Session restoration and login testing
-│   │   ├── concurrency.test.ts    # Competing dispatcher race condition simulation
-│   │   ├── notifications.test.ts  # Notification inbox & read state tests
-│   │   ├── phone-validation.test.ts # International phone format tests
-│   │   ├── state-machine.test.ts  # Authoritative transition matrix tests
-│   │   └── use-incidents.test.tsx # TanStack Query hook tests
-│   ├── components/
-│   │   ├── auth/                  # ProtectedRoute & RoleGuard navigation components
-│   │   ├── ems/                   # EMS core operational interfaces
-│   │   │   ├── admin/             # Admin console for users, fleet & hospital beds
-│   │   │   ├── analytics/         # Real-time SLA charts & KPI metric cards
-│   │   │   ├── citizen/           # Citizen emergency reporting & live tracking
-│   │   │   ├── driver/            # Driver mission queue, action cards & beacon
-│   │   │   ├── FleetPanel.tsx     # Live ambulance status side panel
-│   │   │   ├── IncidentFeed.tsx   # Triage list with countdown SLA progress bars
-│   │   │   ├── LiveMap.tsx        # Leaflet tactical map with custom SVG markers
-│   │   │   ├── NotificationCenter.tsx # Slide-out notification inbox
-│   │   │   └── SelectedIncidentPanel.tsx # Dispatch recommendations & assignment modal
-│   │   ├── providers/
-│   │   │   └── SocketProvider.tsx # Socket.IO client provider & TanStack Query sync
-│   │   └── ui/                    # Accessible UI component library (Radix UI)
-│   ├── hooks/                     # Custom React hooks (incidents, drivers, vehicles)
-│   ├── lib/
-│   │   ├── api/                   # Typed API client modules (client.ts, auth.ts, etc.)
-│   │   ├── ems/                   # Geospatial utilities, constants & mock shapes
-│   │   ├── auth-context.tsx       # AuthProvider context & session management
-│   │   ├── queryKeys.ts           # Centralized TanStack Query cache key factory
-│   │   ├── socket.ts              # Socket.IO client singleton configuration
-│   │   └── token-store.ts         # In-memory access token & refresh token storage
-│   ├── routes/                    # File-based TanStack routes
-│   │   ├── __root.tsx             # Root layout with QueryClientProvider & Toaster
-│   │   ├── index.tsx              # Public landing page
-│   │   ├── login.tsx              # Unified login & registration portal
-│   │   ├── citizen.tsx            # Protected citizen portal route
-│   │   ├── dispatch.tsx           # Protected dispatcher command center route
-│   │   ├── driver.tsx             # Protected driver navigation route
-│   │   ├── admin.tsx              # Protected administrator console route
-│   │   ├── analytics.tsx          # Standalone analytics route
-│   │   ├── fleet.tsx              # Standalone fleet registry route
-│   │   └── incidents.tsx          # Standalone incident registry route
-│   ├── styles.css                 # Global CSS & Tailwind styles
-│   └── start.ts                   # Application bootstrap
-├── .env.example                   # Frontend environment variable template
-├── package.json                   # Frontend dependencies & npm scripts
-├── tsconfig.json                  # TypeScript compiler configuration
-├── vite.config.ts                 # Vite bundler configuration
-└── vitest.config.ts               # Vitest runner configuration
+Γö£ΓöÇΓöÇ .github/
+Γöé   ΓööΓöÇΓöÇ workflows/
+Γöé       ΓööΓöÇΓöÇ ci.yml                 # GitHub Actions CI (lint, typecheck, test, build)
+Γö£ΓöÇΓöÇ public/                        # Static assets & favicons
+Γö£ΓöÇΓöÇ server/                        # Express + PostgreSQL + Socket.IO Backend
+Γöé   Γö£ΓöÇΓöÇ migrations/
+Γöé   Γöé   Γö£ΓöÇΓöÇ 20260710_000_init.js   # Core schema: users, vehicles, drivers, incidents, etc.
+Γöé   Γöé   ΓööΓöÇΓöÇ 20260814_001_driver_constraints.js # Driver uniqueness & vehicle constraints
+Γöé   Γö£ΓöÇΓöÇ seeds/
+Γöé   Γöé   ΓööΓöÇΓöÇ 001_seed.js            # Vellore hospitals, ambulance fleet, admin/dispatch accounts
+Γöé   Γö£ΓöÇΓöÇ src/
+Γöé   Γöé   Γö£ΓöÇΓöÇ middleware/
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ audit.js           # Security audit log middleware
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ auth.js            # JWT authenticate & requireRole guards
+Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ error.js           # Centralized 4-argument error handler & 404 catcher
+Γöé   Γöé   Γö£ΓöÇΓöÇ modules/
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ analytics/         # KPI summaries & SLA compliance endpoints
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ auth/              # Registration, login, silent refresh, /me
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ dispatch/          # Multi-factor ambulance recommendation engine
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ drivers/           # Driver roster, GPS telemetry ingestion, shift toggle
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ hospitals/         # Hospital bed capacity tracking
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ incidents/         # Incident CRUD, state machine & row-locked assignment
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ notifications/     # Persistent notification store & user inbox
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ users/             # Admin staff creation & role management
+Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ vehicles/          # Ambulance fleet CRUD
+Γöé   Γöé   Γö£ΓöÇΓöÇ utils/
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ asyncHandler.js    # Express async route wrapper
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ geo.js             # Haversine distance & ETA formulas
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ httpError.js       # Custom structured HTTP error class
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ jwt.js             # Sign and verify access/refresh tokens
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ password.js        # Bcrypt hash and verify utilities
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ phone.js           # E.164 international phone number validation
+Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ validate.js        # Zod middleware wrapper
+Γöé   Γöé   Γö£ΓöÇΓöÇ app.js                 # Express application factory & route mounting
+Γöé   Γöé   Γö£ΓöÇΓöÇ config.js              # Environment variable parser with typed defaults
+Γöé   Γöé   Γö£ΓöÇΓöÇ db.js                  # Knex PostgreSQL connection pool singleton
+Γöé   Γöé   Γö£ΓöÇΓöÇ index.js               # HTTP listener, Socket.IO attachment & graceful shutdown
+Γöé   Γöé   Γö£ΓöÇΓöÇ logger.js              # Pino logger configuration
+Γöé   Γöé   ΓööΓöÇΓöÇ socket.js              # Socket.IO handshake auth, room setup & event emitters
+Γöé   Γö£ΓöÇΓöÇ .dockerignore
+Γöé   Γö£ΓöÇΓöÇ .env.example               # Backend environment variable template
+Γöé   Γö£ΓöÇΓöÇ Dockerfile                 # Multi-stage production container build
+Γöé   Γö£ΓöÇΓöÇ docker-compose.yml         # PostGIS 16 + API orchestration
+Γöé   Γö£ΓöÇΓöÇ knexfile.js                # Database connection configuration for Knex CLI
+Γöé   ΓööΓöÇΓöÇ package.json               # Backend dependencies & npm scripts
+Γö£ΓöÇΓöÇ src/                           # React 19 Frontend
+Γöé   Γö£ΓöÇΓöÇ __tests__/                 # Vitest test suite
+Γöé   Γöé   Γö£ΓöÇΓöÇ auth-context.test.tsx  # Session restoration and login testing
+Γöé   Γöé   Γö£ΓöÇΓöÇ concurrency.test.ts    # Competing dispatcher race condition simulation
+Γöé   Γöé   Γö£ΓöÇΓöÇ notifications.test.ts  # Notification inbox & read state tests
+Γöé   Γöé   Γö£ΓöÇΓöÇ phone-validation.test.ts # International phone format tests
+Γöé   Γöé   Γö£ΓöÇΓöÇ state-machine.test.ts  # Authoritative transition matrix tests
+Γöé   Γöé   ΓööΓöÇΓöÇ use-incidents.test.tsx # TanStack Query hook tests
+Γöé   Γö£ΓöÇΓöÇ components/
+Γöé   Γöé   Γö£ΓöÇΓöÇ auth/                  # ProtectedRoute & RoleGuard navigation components
+Γöé   Γöé   Γö£ΓöÇΓöÇ ems/                   # EMS core operational interfaces
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ admin/             # Admin console for users, fleet & hospital beds
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ analytics/         # Real-time SLA charts & KPI metric cards
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ citizen/           # Citizen emergency reporting & live tracking
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ driver/            # Driver mission queue, action cards & beacon
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ FleetPanel.tsx     # Live ambulance status side panel
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ IncidentFeed.tsx   # Triage list with countdown SLA progress bars
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ LiveMap.tsx        # Leaflet tactical map with custom SVG markers
+Γöé   Γöé   Γöé   Γö£ΓöÇΓöÇ NotificationCenter.tsx # Slide-out notification inbox
+Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ SelectedIncidentPanel.tsx # Dispatch recommendations & assignment modal
+Γöé   Γöé   Γö£ΓöÇΓöÇ providers/
+Γöé   Γöé   Γöé   ΓööΓöÇΓöÇ SocketProvider.tsx # Socket.IO client provider & TanStack Query sync
+Γöé   Γöé   ΓööΓöÇΓöÇ ui/                    # Accessible UI component library (Radix UI)
+Γöé   Γö£ΓöÇΓöÇ hooks/                     # Custom React hooks (incidents, drivers, vehicles)
+Γöé   Γö£ΓöÇΓöÇ lib/
+Γöé   Γöé   Γö£ΓöÇΓöÇ api/                   # Typed API client modules (client.ts, auth.ts, etc.)
+Γöé   Γöé   Γö£ΓöÇΓöÇ ems/                   # Geospatial utilities, constants & mock shapes
+Γöé   Γöé   Γö£ΓöÇΓöÇ auth-context.tsx       # AuthProvider context & session management
+Γöé   Γöé   Γö£ΓöÇΓöÇ queryKeys.ts           # Centralized TanStack Query cache key factory
+Γöé   Γöé   Γö£ΓöÇΓöÇ socket.ts              # Socket.IO client singleton configuration
+Γöé   Γöé   ΓööΓöÇΓöÇ token-store.ts         # In-memory access token & refresh token storage
+Γöé   Γö£ΓöÇΓöÇ routes/                    # File-based TanStack routes
+Γöé   Γöé   Γö£ΓöÇΓöÇ __root.tsx             # Root layout with QueryClientProvider & Toaster
+Γöé   Γöé   Γö£ΓöÇΓöÇ index.tsx              # Public landing page
+Γöé   Γöé   Γö£ΓöÇΓöÇ login.tsx              # Unified login & registration portal
+Γöé   Γöé   Γö£ΓöÇΓöÇ citizen.tsx            # Protected citizen portal route
+Γöé   Γöé   Γö£ΓöÇΓöÇ dispatch.tsx           # Protected dispatcher command center route
+Γöé   Γöé   Γö£ΓöÇΓöÇ driver.tsx             # Protected driver navigation route
+Γöé   Γöé   Γö£ΓöÇΓöÇ admin.tsx              # Protected administrator console route
+Γöé   Γöé   Γö£ΓöÇΓöÇ analytics.tsx          # Standalone analytics route
+Γöé   Γöé   Γö£ΓöÇΓöÇ fleet.tsx              # Standalone fleet registry route
+Γöé   Γöé   ΓööΓöÇΓöÇ incidents.tsx          # Standalone incident registry route
+Γöé   Γö£ΓöÇΓöÇ styles.css                 # Global CSS & Tailwind styles
+Γöé   ΓööΓöÇΓöÇ start.ts                   # Application bootstrap
+Γö£ΓöÇΓöÇ .env.example                   # Frontend environment variable template
+Γö£ΓöÇΓöÇ package.json                   # Frontend dependencies & npm scripts
+Γö£ΓöÇΓöÇ tsconfig.json                  # TypeScript compiler configuration
+Γö£ΓöÇΓöÇ vite.config.ts                 # Vite bundler configuration
+ΓööΓöÇΓöÇ vitest.config.ts               # Vitest runner configuration
 ```
 
 ---
 
-## 🔌 API Reference
+## ≡ƒöî API Reference
 
 All backend API routes are prefixed under `/api`. Authenticated endpoints require a standard `Authorization: Bearer <accessToken>` HTTP header.
 
-| Method | Endpoint | Description | Auth / Role Requirement |
-| :--- | :--- | :--- | :--- |
-| **POST** | `/api/auth/register` | Register a new `citizen` or `driver` account | Public |
-| **POST** | `/api/auth/login` | Authenticate with email/password; returns access & refresh tokens | Public |
-| **POST** | `/api/auth/refresh` | Exchange valid refresh token for a new token pair | Public |
-| **GET** | `/api/auth/me` | Fetch authenticated user's profile | Authenticated (Any) |
-| **GET** | `/api/users` | List all registered users | `admin` |
-| **POST** | `/api/users` | Provision a new `dispatcher` or `admin` account | `admin` |
-| **PATCH** | `/api/users/:id/role` | Elevate or modify a user's system role | `admin` |
-| **GET** | `/api/incidents` | Fetch active/filtered incidents (role-scoped) | Authenticated (Any) |
-| **GET** | `/api/incidents/:id` | Fetch incident details and full timeline audit log | Authenticated (Any) |
-| **POST** | `/api/incidents` | Report a new emergency incident | Authenticated (Any) |
-| **POST** | `/api/incidents/:id/assign`| **Assign ambulance using row-level pessimistic locking** | `dispatcher`, `admin` |
-| **PATCH** | `/api/incidents/:id/status`| Transition incident through state machine | `driver`, `dispatcher`, `admin` |
-| **GET** | `/api/dispatch/recommend/:incidentId` | Algorithmic ranking of top 5 available ambulances | `dispatcher`, `admin` |
-| **GET** | `/api/drivers` | Fetch all drivers with vehicle and user joins | Authenticated (Any) |
-| **GET** | `/api/drivers/me` | Fetch driver profile for currently logged-in user | Authenticated (Any) |
-| **POST** | `/api/drivers/me/location` | Stream GPS coordinates, heading, and ping time | `driver` |
-| **PATCH** | `/api/drivers/me/status` | Update shift status (`available` &harr; `offline`) | `driver` |
-| **GET** | `/api/vehicles` | Fetch ambulance fleet registry | Authenticated (Any) |
-| **POST** | `/api/vehicles` | Register a new ambulance vehicle | `dispatcher`, `admin` |
-| **PATCH** | `/api/vehicles/:id` | Modify vehicle status or model details | `dispatcher`, `admin` |
-| **DELETE** | `/api/vehicles/:id` | Decommission vehicle from fleet | `admin` |
-| **GET** | `/api/hospitals` | List all hospitals and bed capacities | Authenticated (Any) |
-| **PATCH** | `/api/hospitals/:id/beds` | Update available hospital bed counts | `dispatcher`, `admin` |
-| **GET** | `/api/analytics/overview` | Fetch SLA compliance %, average response time, counts | `dispatcher`, `admin` |
-| **GET** | `/api/analytics/sla` | Fetch average response times grouped by priority | `dispatcher`, `admin` |
-| **GET** | `/api/notifications` | Fetch user's notification inbox | Authenticated (Any) |
-| **POST** | `/api/notifications/:id/read` | Mark individual notification as read | Authenticated (Any) |
-| **POST** | `/api/notifications/read-all` | Mark all notifications as read | Authenticated (Any) |
-| **GET** | `/health` | Verify API health and database connectivity | Public |
+| Method     | Endpoint                              | Description                                                       | Auth / Role Requirement         |
+| :--------- | :------------------------------------ | :---------------------------------------------------------------- | :------------------------------ |
+| **POST**   | `/api/auth/register`                  | Register a new `citizen` or `driver` account                      | Public                          |
+| **POST**   | `/api/auth/login`                     | Authenticate with email/password; returns access & refresh tokens | Public                          |
+| **POST**   | `/api/auth/refresh`                   | Exchange valid refresh token for a new token pair                 | Public                          |
+| **GET**    | `/api/auth/me`                        | Fetch authenticated user's profile                                | Authenticated (Any)             |
+| **GET**    | `/api/users`                          | List all registered users                                         | `admin`                         |
+| **POST**   | `/api/users`                          | Provision a new `dispatcher` or `admin` account                   | `admin`                         |
+| **PATCH**  | `/api/users/:id/role`                 | Elevate or modify a user's system role                            | `admin`                         |
+| **GET**    | `/api/incidents`                      | Fetch active/filtered incidents (role-scoped)                     | Authenticated (Any)             |
+| **GET**    | `/api/incidents/:id`                  | Fetch incident details and full timeline audit log                | Authenticated (Any)             |
+| **POST**   | `/api/incidents`                      | Report a new emergency incident                                   | Authenticated (Any)             |
+| **POST**   | `/api/incidents/:id/assign`           | **Assign ambulance using row-level pessimistic locking**          | `dispatcher`, `admin`           |
+| **PATCH**  | `/api/incidents/:id/status`           | Transition incident through state machine                         | `driver`, `dispatcher`, `admin` |
+| **GET**    | `/api/dispatch/recommend/:incidentId` | Algorithmic ranking of top 5 available ambulances                 | `dispatcher`, `admin`           |
+| **GET**    | `/api/drivers`                        | Fetch all drivers with vehicle and user joins                     | Authenticated (Any)             |
+| **GET**    | `/api/drivers/me`                     | Fetch driver profile for currently logged-in user                 | Authenticated (Any)             |
+| **POST**   | `/api/drivers/me/location`            | Stream GPS coordinates, heading, and ping time                    | `driver`                        |
+| **PATCH**  | `/api/drivers/me/status`              | Update shift status (`available` &harr; `offline`)                | `driver`                        |
+| **GET**    | `/api/vehicles`                       | Fetch ambulance fleet registry                                    | Authenticated (Any)             |
+| **POST**   | `/api/vehicles`                       | Register a new ambulance vehicle                                  | `dispatcher`, `admin`           |
+| **PATCH**  | `/api/vehicles/:id`                   | Modify vehicle status or model details                            | `dispatcher`, `admin`           |
+| **DELETE** | `/api/vehicles/:id`                   | Decommission vehicle from fleet                                   | `admin`                         |
+| **GET**    | `/api/hospitals`                      | List all hospitals and bed capacities                             | Authenticated (Any)             |
+| **PATCH**  | `/api/hospitals/:id/beds`             | Update available hospital bed counts                              | `dispatcher`, `admin`           |
+| **GET**    | `/api/analytics/overview`             | Fetch SLA compliance %, average response time, counts             | `dispatcher`, `admin`           |
+| **GET**    | `/api/analytics/sla`                  | Fetch average response times grouped by priority                  | `dispatcher`, `admin`           |
+| **GET**    | `/api/notifications`                  | Fetch user's notification inbox                                   | Authenticated (Any)             |
+| **POST**   | `/api/notifications/:id/read`         | Mark individual notification as read                              | Authenticated (Any)             |
+| **POST**   | `/api/notifications/read-all`         | Mark all notifications as read                                    | Authenticated (Any)             |
+| **GET**    | `/health`                             | Verify API health and database connectivity                       | Public                          |
 
 ---
 
-## ⚡ Socket.IO Event Reference
+## ΓÜí Socket.IO Event Reference
 
 Real-time communication is powered by Socket.IO with JWT authentication and room-based privacy scoping:
 
-| Event Name | Direction | Payload Structure | Target Audience | Trigger Scenario |
-| :--- | :---: | :--- | :--- | :--- |
-| `incident:created` | Server &rarr; Client | Complete `Incident` object | `role:dispatcher`, `role:admin`, `user:<citizenId>` | Citizen reports an emergency |
-| `incident:assigned` | Server &rarr; Client | Updated `Incident` with driver ID | `role:dispatcher`, `role:admin`, `user:<citizenId>`, `user:<driverId>` | Ambulance successfully assigned |
-| `incident:new` | Server &rarr; Client | `Incident` object | `user:<driverUserId>` | Dedicated driver alert on new mission assignment |
-| `incident:updated` | Server &rarr; Client | Updated `Incident` object | `role:dispatcher`, `role:admin`, `user:<citizenId>`, `user:<driverId>` | Stage advanced (`en_route`, `arrived`, etc.) |
-| `driver:location` | Client &rarr; Server | `{ lat, lng, heading }` | API Gateway | Driver geolocation watcher emits coordinates |
-| `driver:location` | Server &rarr; Client | `{ driverId, lat, lng, heading, at }`| `role:dispatcher`, `role:admin`, `user:<citizenId>` | Telemetry relayed to tactical maps |
-| `driver:status` | Server &rarr; Client | Updated `Driver` object | Global (`io.emit`) | Driver status changes (`busy`, `available`, `offline`)|
-| `fleet:updated` | Server &rarr; Client | Updated `Vehicle` object | Global (`io.emit`) | Vehicle status or fleet record modified |
-| `notification:created`| Server &rarr; Client | `Notification` record | `user:<userId>` | New persistent notification saved for user |
-| `role:notification` | Server &rarr; Client | `{ kind, title, body, data }` | `role:<role>` | System-wide broadcast to specific staff role |
+| Event Name             |      Direction       | Payload Structure                     | Target Audience                                                        | Trigger Scenario                                       |
+| :--------------------- | :------------------: | :------------------------------------ | :--------------------------------------------------------------------- | :----------------------------------------------------- |
+| `incident:created`     | Server &rarr; Client | Complete `Incident` object            | `role:dispatcher`, `role:admin`, `user:<citizenId>`                    | Citizen reports an emergency                           |
+| `incident:assigned`    | Server &rarr; Client | Updated `Incident` with driver ID     | `role:dispatcher`, `role:admin`, `user:<citizenId>`, `user:<driverId>` | Ambulance successfully assigned                        |
+| `incident:new`         | Server &rarr; Client | `Incident` object                     | `user:<driverUserId>`                                                  | Dedicated driver alert on new mission assignment       |
+| `incident:updated`     | Server &rarr; Client | Updated `Incident` object             | `role:dispatcher`, `role:admin`, `user:<citizenId>`, `user:<driverId>` | Stage advanced (`en_route`, `arrived`, etc.)           |
+| `driver:location`      | Client &rarr; Server | `{ lat, lng, heading }`               | API Gateway                                                            | Driver geolocation watcher emits coordinates           |
+| `driver:location`      | Server &rarr; Client | `{ driverId, lat, lng, heading, at }` | `role:dispatcher`, `role:admin`, `user:<citizenId>`                    | Telemetry relayed to tactical maps                     |
+| `driver:status`        | Server &rarr; Client | Updated `Driver` object               | Global (`io.emit`)                                                     | Driver status changes (`busy`, `available`, `offline`) |
+| `fleet:updated`        | Server &rarr; Client | Updated `Vehicle` object              | Global (`io.emit`)                                                     | Vehicle status or fleet record modified                |
+| `notification:created` | Server &rarr; Client | `Notification` record                 | `user:<userId>`                                                        | New persistent notification saved for user             |
+| `role:notification`    | Server &rarr; Client | `{ kind, title, body, data }`         | `role:<role>`                                                          | System-wide broadcast to specific staff role           |
 
 ---
 
-## 🚀 Installation & Local Setup
+## ≡ƒÜÇ Installation & Local Setup
 
 ### Prerequisites
+
 - **Node.js**: `v20.x` or higher
 - **PostgreSQL**: `v16.x` (or Docker installed)
 - **Package Manager**: `npm`
@@ -801,6 +822,7 @@ cp .env.example .env
 # 3. Start PostgreSQL and API containers
 docker compose up --build
 ```
+
 The backend API and health checks will be live at `http://localhost:4000`. Migrations run automatically on container boot.
 
 ---
@@ -808,6 +830,7 @@ The backend API and health checks will be live at `http://localhost:4000`. Migra
 ### Option B: Native Local Setup
 
 #### 1. Setup Backend (`server/`)
+
 ```bash
 # Navigate to backend directory
 cd server
@@ -830,9 +853,11 @@ npm run seed
 # Start development server with nodemon
 npm run dev
 ```
+
 Backend runs on: **`http://localhost:4000`**
 
 #### 2. Setup Frontend (Root directory)
+
 ```bash
 # Open a new terminal and navigate to the project root
 cd ..
@@ -846,46 +871,47 @@ cp .env.example .env
 # Start Vite development server
 npm run dev
 ```
+
 Frontend runs on: **`http://localhost:8080`**
 
 ---
 
-### 🔑 Seed Accounts Available Immediately
+### ≡ƒöæ Seed Accounts Available Immediately
 
 The database seed (`server/seeds/001_seed.js`) automatically provisions initial operational accounts:
 
-| Role | Email Address | Password | Operational Access |
-| :--- | :--- | :--- | :--- |
-| **Administrator** | `admin@ems.local` | `admin1234` | Full access to `/admin`, `/dispatch`, `/analytics` |
-| **Dispatcher** | `dispatch@ems.local` | `dispatch1234` | Access to Command Center `/dispatch`, `/incidents` |
-| **Citizen** | *Create via Register tab* | *(min 8 chars)* | Access to Emergency Intake `/citizen` |
-| **Driver** | *Create via Register tab* | *(min 8 chars)* | Binds to available fleet ambulance; access to `/driver` |
+| Role              | Email Address             | Password        | Operational Access                                      |
+| :---------------- | :------------------------ | :-------------- | :------------------------------------------------------ |
+| **Administrator** | `admin@ems.local`         | `admin1234`     | Full access to `/admin`, `/dispatch`, `/analytics`      |
+| **Dispatcher**    | `dispatch@ems.local`      | `dispatch1234`  | Access to Command Center `/dispatch`, `/incidents`      |
+| **Citizen**       | _Create via Register tab_ | _(min 8 chars)_ | Access to Emergency Intake `/citizen`                   |
+| **Driver**        | _Create via Register tab_ | _(min 8 chars)_ | Binds to available fleet ambulance; access to `/driver` |
 
 ---
 
-## 🌐 Deployment Architecture
+## ≡ƒîÉ Deployment Architecture
 
 ResQ is architected for containerized cloud deployment across standard platforms (AWS ECS, DigitalOcean App Platform, Render, or GCP Cloud Run):
 
 ```
                                   INTERNET
-                                     │
-                 ┌───────────────────┴───────────────────┐
-                 │ HTTPS (Port 443) / WSS                │
-                 ▼                                       ▼
-    ┌─────────────────────────┐             ┌─────────────────────────┐
-    │     Frontend Client     │             │     Backend API & WS    │
-    │   (Vite / Nitro / Edge) │             │    (Node 20 Container)  │
-    │  VITE_API_URL: /api     │             │    PORT: 4000           │
-    │  VITE_SOCKET_URL        │ ──────────> │    CORS_ORIGIN: Client  │
-    └─────────────────────────┘             └────────────┬────────────┘
-                                                         │
-                                                         ▼
-                                            ┌─────────────────────────┐
-                                            │   Managed PostgreSQL    │
-                                            │      (PostGIS 16)       │
-                                            │  Connection Pooling     │
-                                            └─────────────────────────┘
+                                     Γöé
+                 ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+                 Γöé HTTPS (Port 443) / WSS                Γöé
+                 Γû╝                                       Γû╝
+    ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ             ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+    Γöé     Frontend Client     Γöé             Γöé     Backend API & WS    Γöé
+    Γöé   (Vite / Nitro / Edge) Γöé             Γöé    (Node 20 Container)  Γöé
+    Γöé  VITE_API_URL: /api     Γöé             Γöé    PORT: 4000           Γöé
+    Γöé  VITE_SOCKET_URL        Γöé ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ> Γöé    CORS_ORIGIN: Client  Γöé
+    ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ             ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+                                                         Γöé
+                                                         Γû╝
+                                            ΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ
+                                            Γöé   Managed PostgreSQL    Γöé
+                                            Γöé      (PostGIS 16)       Γöé
+                                            Γöé  Connection Pooling     Γöé
+                                            ΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
 ```
 
 - **Containerization**: `server/Dockerfile` uses a multi-stage Alpine build that prunes dev dependencies, sets `NODE_ENV=production`, configures an unprivileged user, and executes container health checks against `/health`.
@@ -896,38 +922,46 @@ ResQ is architected for containerized cloud deployment across standard platforms
 
 ---
 
-## 📸 Screenshots
+## ≡ƒô╕ Screenshots
 
 <div align="center">
 
 ### Command Center Dispatcher Console (`/dispatch`)
+
 <!-- Add screenshot here: Tactical Leaflet map with pulsing emergency markers, SLA timers, and recommendation panel -->
-*Live incident feed with countdown SLA bars, active ambulance tracking, and multi-factor recommendation engine.*
+
+_Live incident feed with countdown SLA bars, active ambulance tracking, and multi-factor recommendation engine._
 
 ### Field Responder Console (`/driver`)
+
 <!-- Add screenshot here: Driver mobile interface with stage advancement buttons and real-time telemetry -->
-*High-contrast mobile interface with one-tap state progression, turn-by-turn routing, and GPS beacon streaming.*
+
+_High-contrast mobile interface with one-tap state progression, turn-by-turn routing, and GPS beacon streaming._
 
 ### Citizen Emergency Portal (`/citizen`)
+
 <!-- Add screenshot here: Citizen intake form and live ambulance ETA map -->
-*Instant emergency request interface with real-time responder call sign, distance in km, and live map tracking.*
+
+_Instant emergency request interface with real-time responder call sign, distance in km, and live map tracking._
 
 ### Administration & Fleet Console (`/admin`)
+
 <!-- Add screenshot here: User management, vehicle fleet CRUD, and hospital bed availability -->
-*Governance panel for dynamic staff provisioning, ambulance maintenance toggles, and regional hospital bed capacity.*
+
+_Governance panel for dynamic staff provisioning, ambulance maintenance toggles, and regional hospital bed capacity._
 
 </div>
 
 ---
 
-## 🎥 Demo
+## ≡ƒÄÑ Demo
 
-> **Live Demonstration Video:** *Demo coming soon*  
+> **Live Demonstration Video:** _Demo coming soon_
 > To test the system locally right now, follow the [Quick Start Guide](#-installation--local-setup) and use the provided seed credentials.
 
 ---
 
-## 👨‍💻 Engineering Highlights & Contribution
+## ≡ƒæ¿ΓÇì≡ƒÆ╗ Engineering Highlights & Contribution
 
 Key technical systems designed, implemented, and verified in this codebase:
 
@@ -945,11 +979,11 @@ Key technical systems designed, implemented, and verified in this codebase:
 
 ---
 
-## 🧪 Example Scenario Walkthrough
+## ≡ƒº¬ Example Scenario Walkthrough
 
 ### Scenario: Severe P1 Cardiac Emergency
 
-1. **Intake (00:00)**: Citizen reports a cardiac emergency at CMC Hospital Main Gate, Vellore (`12.9249° N, 79.1350° E`). The backend assigns sequential code **INC-2151**, sets priority **P1** with an **8-minute (480s) SLA**, commits the record, and broadcasts `incident:created` via Socket.IO.
+1. **Intake (00:00)**: Citizen reports a cardiac emergency at CMC Hospital Main Gate, Vellore (`12.9249┬░ N, 79.1350┬░ E`). The backend assigns sequential code **INC-2151**, sets priority **P1** with an **8-minute (480s) SLA**, commits the record, and broadcasts `incident:created` via Socket.IO.
 2. **Triage (00:15)**: Dispatcher sees `INC-2151` appear with a red pulsing beacon and SLA countdown bar. Clicking the incident calls `/api/dispatch/recommend/INC-2151`.
 3. **Recommendation (00:16)**: The algorithm scores `MEDIC 410` (Mercedes Sprinter, ALS) at 94.2 pts (1.2 km away, ~2 min ETA, 4.9 rating, 0 active missions) as the top choice.
 4. **Concurrency Lock (00:20)**: Dispatcher clicks "Assign". A database transaction acquires row locks on `INC-2151`, driver `MEDIC 410`, and vehicle `EMS-4471`. State updates to `assigned`, driver updates to `busy`, and the transaction commits. A competing dispatcher clicking assign 50ms later receives **HTTP 409 Conflict**.
@@ -958,7 +992,7 @@ Key technical systems designed, implemented, and verified in this codebase:
 
 ---
 
-## ⚠️ Limitations
+## ΓÜá∩╕Å Limitations
 
 - **Geodesic Distance (Haversine)**: Distance and ETA calculations use great-circle spherical distance rather than actual road topology or live traffic feeds (e.g. Google Directions or OSRM).
 - **Single-Node Socket.IO**: WebSockets operate on a single Node server instance without a Redis adapter or Redis Streams message bus, meaning horizontal multi-instance clustering requires enabling sticky sessions and Redis pub/sub.
@@ -967,7 +1001,7 @@ Key technical systems designed, implemented, and verified in this codebase:
 
 ---
 
-## 🔮 Future Improvements
+## ≡ƒö« Future Improvements
 
 - [ ] **Road-Aware Routing Engine**: Integrate OpenStreetMap / OSRM or Mapbox Directions API for turn-by-turn road routing and traffic-aware ETA calculation.
 - [ ] **PostGIS Spatial Queries**: Migrate spatial queries from application-level Haversine math to native PostGIS geometry types (`ST_DWithin`, `ST_Distance`).
@@ -977,7 +1011,7 @@ Key technical systems designed, implemented, and verified in this codebase:
 
 ---
 
-## 📚 Learning Outcomes
+## ≡ƒôÜ Learning Outcomes
 
 Building and auditing ResQ demonstrates deep mastery of core software engineering disciplines:
 
@@ -990,15 +1024,15 @@ Building and auditing ResQ demonstrates deep mastery of core software engineerin
 
 ---
 
-## ⭐ Project Highlights
+## Γ¡É Project Highlights
 
 ```
-  🚑 Intelligent Dispatch      🔒 Concurrency Safety        ⚡ Real-Time Telemetry
+  ≡ƒÜæ Intelligent Dispatch      ≡ƒöÆ Concurrency Safety        ΓÜí Real-Time Telemetry
   Multi-factor ranking         PostgreSQL row-level         Sub-second WebSocket
   balancing distance, ETA,     locks (SELECT FOR UPDATE)    streaming of GPS coordinates
   workload, and rating.        prevent duplicate runs.      and incident updates.
 
-  📍 Tactical Mapping          🗄️ Relational Integrity      🔐 Secure Dual-Token RBAC
+  ≡ƒôì Tactical Mapping          ≡ƒùä∩╕Å Relational Integrity      ≡ƒöÉ Secure Dual-Token RBAC
   Interactive Leaflet maps     PostgreSQL 16 engine         15m JWT access + 30d refresh
   with heading-rotated icons   with Knex migrations,        with silent rotation and
   and SLA countdown rings.     UUIDs, and audit logging.    rate-limited auth routes.
@@ -1006,9 +1040,10 @@ Building and auditing ResQ demonstrates deep mastery of core software engineerin
 
 ---
 
-## 👤 Author
+## ≡ƒæñ Author
 
 **Aditya Kumar**
+
 - **GitHub**: [@AdityaKumar1988](https://github.com/AdityaKumar1988)
 - **Repository**: [https://github.com/AdityaKumar1988/smart-ems](https://github.com/AdityaKumar1988/smart-ems)
 - **Email**: [adityakrjha1988@gmail.com](mailto:adityakrjha1988@gmail.com)

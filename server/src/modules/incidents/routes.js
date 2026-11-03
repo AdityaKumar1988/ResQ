@@ -7,6 +7,7 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import { HttpError } from "../../utils/httpError.js";
 import { emit } from "../../socket.js";
 import { createAndEmitNotification, notifyRole } from "../notifications/service.js";
+import { calculateRouteEta, isValidCoordinate } from "../../utils/routing.js";
 
 const router = Router();
 router.use(authenticate);
@@ -69,16 +70,76 @@ router.get(
   "/",
   asyncHandler(async (req, res) => {
     const { status, priority, limit = 100 } = req.query;
-    const q = db("incidents").orderBy("reported_at", "desc").limit(Number(limit));
-    if (req.user.role === "citizen") q.where("citizen_user_id", req.user.sub);
+    const q = db("incidents")
+      .leftJoin("drivers", "drivers.id", "incidents.driver_id")
+      .leftJoin("users as driver_users", "driver_users.id", "drivers.user_id")
+      .select(
+        "incidents.*",
+        "drivers.call_sign as driver_call_sign",
+        "drivers.rating as driver_rating",
+        "drivers.missions_completed as driver_missions_completed",
+        "drivers.location_lat as driver_location_lat",
+        "drivers.location_lng as driver_location_lng",
+        "drivers.heading as driver_heading",
+        "drivers.status as driver_status",
+        "driver_users.name as driver_name",
+        "driver_users.phone as driver_phone",
+      )
+      .orderBy("incidents.reported_at", "desc")
+      .limit(Number(limit));
+    if (req.user.role === "citizen") q.where("incidents.citizen_user_id", req.user.sub);
     if (req.user.role === "driver") {
       const driver = await db("drivers").where({ user_id: req.user.sub }).first("id");
       if (!driver) return res.json({ incidents: [] });
-      q.where("driver_id", driver.id);
+      q.where("incidents.driver_id", driver.id);
     }
-    if (status) q.where("status", status);
-    if (priority) q.where("priority", priority);
-    res.json({ incidents: await q });
+    if (status) q.where("incidents.status", status);
+    if (priority) q.where("incidents.priority", priority);
+
+    const rows = await q;
+    const incidents = await Promise.all(
+      rows.map(async (row) => {
+        let driver = null;
+        let eta_minutes = null;
+        let distance_km = null;
+
+        if (row.driver_id) {
+          driver = {
+            id: row.driver_id,
+            call_sign: row.driver_call_sign,
+            name: row.driver_name || "Ambulance Driver",
+            phone: row.driver_phone || null,
+            rating: Number(row.driver_rating != null ? row.driver_rating : 4.7),
+            missions_completed: Number(row.driver_missions_completed || 0),
+            status: row.driver_status || "busy",
+            location_lat: row.driver_location_lat != null ? Number(row.driver_location_lat) : null,
+            location_lng: row.driver_location_lng != null ? Number(row.driver_location_lng) : null,
+            heading: Number(row.driver_heading || 0),
+          };
+
+          const dLoc = { lat: Number(driver.location_lat), lng: Number(driver.location_lng) };
+          const iLoc = { lat: Number(row.lat), lng: Number(row.lng) };
+
+          if (
+            isValidCoordinate(dLoc) &&
+            isValidCoordinate(iLoc) &&
+            row.status !== "completed" &&
+            row.status !== "cancelled"
+          ) {
+            const route = await calculateRouteEta(dLoc, iLoc);
+            eta_minutes = route.etaMinutes;
+            distance_km = route.distanceKm;
+          }
+        }
+        return {
+          ...row,
+          driver,
+          eta_minutes,
+          distance_km,
+        };
+      }),
+    );
+    res.json({ incidents });
   }),
 );
 
@@ -98,7 +159,52 @@ router.get(
       .select("*", "created_at as timestamp")
       .where({ incident_id: incident.id })
       .orderBy("created_at", "asc");
-    res.json({ incident, timeline });
+
+    let driver = null;
+    let eta_minutes = null;
+    let distance_km = null;
+
+    if (incident.driver_id) {
+      const d = await db("drivers")
+        .leftJoin("users", "users.id", "drivers.user_id")
+        .where("drivers.id", incident.driver_id)
+        .select("drivers.*", "users.name as user_name", "users.phone as user_phone")
+        .first();
+      if (d) {
+        driver = {
+          id: d.id,
+          call_sign: d.call_sign,
+          name: d.user_name || d.name || "Ambulance Driver",
+          phone: d.user_phone || d.phone || null,
+          rating: Number(d.rating != null ? d.rating : 4.7),
+          missions_completed: Number(d.missions_completed != null ? d.missions_completed : 0),
+          status: d.status || "busy",
+          location_lat: d.location_lat != null ? Number(d.location_lat) : null,
+          location_lng: d.location_lng != null ? Number(d.location_lng) : null,
+          heading: Number(d.heading != null ? d.heading : 0),
+        };
+
+        const dLoc = { lat: Number(driver.location_lat), lng: Number(driver.location_lng) };
+        const iLoc = { lat: Number(incident.lat), lng: Number(incident.lng) };
+
+        let polyline = null;
+        if (
+          isValidCoordinate(dLoc) &&
+          isValidCoordinate(iLoc) &&
+          incident.status !== "completed" &&
+          incident.status !== "cancelled"
+        ) {
+          const route = await calculateRouteEta(dLoc, iLoc, { includeGeometry: true });
+          eta_minutes = route.etaMinutes;
+          distance_km = route.distanceKm;
+          polyline = route.polyline;
+        }
+      }
+    }
+    res.json({
+      incident: { ...incident, driver, eta_minutes, distance_km, polyline },
+      timeline,
+    });
   }),
 );
 
@@ -270,7 +376,44 @@ router.post(
       };
     });
 
-    emit.incidentAssigned(assignment.incident, assignment.driverUserId);
+    const driverUser = await db("users").where({ id: assignment.driverUserId }).first();
+    const driverObj = {
+      id: assignment.driver.id,
+      call_sign: assignment.driver.call_sign,
+      name: driverUser?.name || "Ambulance Driver",
+      phone: driverUser?.phone || null,
+      rating: Number(assignment.driver.rating != null ? assignment.driver.rating : 4.7),
+      missions_completed: Number(assignment.driver.missions_completed || 0),
+      status: "busy",
+      location_lat:
+        assignment.driver.location_lat != null ? Number(assignment.driver.location_lat) : null,
+      location_lng:
+        assignment.driver.location_lng != null ? Number(assignment.driver.location_lng) : null,
+      heading: Number(assignment.driver.heading || 0),
+    };
+
+    let initialEta = null;
+    let initialDistance = null;
+    let initialPolyline = null;
+    const dLoc = { lat: driverObj.location_lat, lng: driverObj.location_lng };
+    const iLoc = { lat: Number(assignment.incident.lat), lng: Number(assignment.incident.lng) };
+
+    if (isValidCoordinate(dLoc) && isValidCoordinate(iLoc)) {
+      const route = await calculateRouteEta(dLoc, iLoc, { includeGeometry: true });
+      initialEta = route.etaMinutes;
+      initialDistance = route.distanceKm;
+      initialPolyline = route.polyline;
+    }
+
+    const enrichedIncident = {
+      ...assignment.incident,
+      driver: driverObj,
+      eta_minutes: initialEta,
+      distance_km: initialDistance,
+      polyline: initialPolyline,
+    };
+
+    emit.incidentAssigned(enrichedIncident, assignment.driverUserId);
     emit.driverStatusChanged(assignment.driver);
     emit.fleetUpdated(assignment.vehicle);
 
@@ -318,7 +461,7 @@ router.post(
       },
     });
 
-    res.json({ incident: assignment.incident });
+    res.json({ incident: enrichedIncident });
   }),
 );
 
