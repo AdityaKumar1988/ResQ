@@ -1,3 +1,4 @@
+
 name: CI
 
 on:
@@ -12,10 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
+
       - run: npm ci
       - run: npm run lint
       - run: npx tsc --noEmit
@@ -30,14 +33,16 @@ jobs:
         working-directory: server
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
           cache-dependency-path: server/package-lock.json
+
       - run: npm ci
-      - run: npm run lint || true
-      - run: npm test || echo "No backend tests configured yet"
+      - run: npm run lint
+      - run: npm test
 
   build-check:
     name: Production build check
@@ -45,9 +50,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
+
       - run: npm ci
       - run: npm run build
