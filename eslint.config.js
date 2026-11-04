@@ -12,7 +12,13 @@ export default tseslint.config(
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser,
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        React: "readonly",
+        RequestInit: "readonly",
+        HeadersInit: "readonly",
+      },
     },
     plugins: {
       "react-hooks": reactHooks,
@@ -34,6 +40,7 @@ export default tseslint.config(
       ],
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
+      "no-undef": "error",
     },
   },
   eslintPluginPrettier,

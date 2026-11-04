@@ -12,7 +12,16 @@ export interface CreateVehicleInput {
   status?: "available" | "en_route" | "busy" | "at_hospital" | "offline" | "maintenance";
 }
 
+export interface UpdateVehicleInput {
+  plate?: string;
+  model?: string;
+  type?: "ALS" | "BLS" | "ICU" | "MICU";
+  status?: "available" | "en_route" | "busy" | "at_hospital" | "offline" | "maintenance";
+}
+
 export const vehiclesApi = {
   list: () => client.get<VehiclesListResponse>("/vehicles"),
   create: (data: CreateVehicleInput) => client.post<{ vehicle: Vehicle }>("/vehicles", data),
+  update: (id: string, data: UpdateVehicleInput) =>
+    client.patch<{ vehicle: Vehicle }>(`/vehicles/${id}`, data),
 };

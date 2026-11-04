@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import type { Citizen } from "./types";
 import { useAuth } from "@/lib/auth-context";
 
@@ -20,6 +20,7 @@ function makeDefault(): Citizen {
 export function useCitizenIdentity(): [Citizen, (patch: Partial<Citizen>) => void] {
   const { user } = useAuth();
   const [citizen, setCitizen] = useState<Citizen>(() => makeDefault());
+  const geoRequestedRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -47,7 +48,8 @@ export function useCitizenIdentity(): [Citizen, (patch: Partial<Citizen>) => voi
       });
     }
 
-    if (navigator.geolocation) {
+    if (!geoRequestedRef.current && navigator.geolocation) {
+      geoRequestedRef.current = true;
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setCitizen((old) => {

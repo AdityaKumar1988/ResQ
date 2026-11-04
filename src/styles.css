@@ -3,24 +3,28 @@
 @import "tw-animate-css";
 @import "leaflet/dist/leaflet.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark, .dark *));
 
 /*
- * Smart EMS — Enterprise Emergency Operations design system.
- * Dark professional. Inspired by Linear, Palantir, Datadog, Flight Control.
- * All colors OKLCH. Never hardcode colors in components; use tokens.
+ * ResQ — Direction 3: Modern Minimalist Fleet Orchestration & Ergonomics
+ * Clean, high-contrast, accessible OKLCH design system.
+ * Minimal cognitive load, 4pt rhythm, no decorative gradients, no garish glows.
  */
 
 @theme inline {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Manrope", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
+  /* Standard Radius Scale */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
 
+  /* Surfaces & Backgrounds */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
@@ -31,150 +35,268 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  --color-hover: var(--hover);
+
+  /* Brand Primary */
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-primary-glow: var(--primary-glow);
+  --color-primary-subtle: var(--primary-subtle);
+
+  /* Secondary & Muted */
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-tertiary-foreground: var(--tertiary-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+
+  /* Architectural Borders & Rings */
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Priority */
+  /* Priority Triage Palette */
   --color-p1: var(--p1);
   --color-p1-foreground: var(--p1-foreground);
+  --color-p1-subtle: var(--p1-subtle);
   --color-p2: var(--p2);
   --color-p2-foreground: var(--p2-foreground);
+  --color-p2-subtle: var(--p2-subtle);
   --color-p3: var(--p3);
   --color-p3-foreground: var(--p3-foreground);
+  --color-p3-subtle: var(--p3-subtle);
   --color-p4: var(--p4);
   --color-p4-foreground: var(--p4-foreground);
+  --color-p4-subtle: var(--p4-subtle);
 
-  /* Status */
+  /* Fleet Status Palette */
   --color-status-available: var(--status-available);
+  --color-status-available-subtle: var(--status-available-subtle);
   --color-status-enroute: var(--status-enroute);
+  --color-status-enroute-subtle: var(--status-enroute-subtle);
   --color-status-busy: var(--status-busy);
+  --color-status-busy-subtle: var(--status-busy-subtle);
   --color-status-hospital: var(--status-hospital);
+  --color-status-hospital-subtle: var(--status-hospital-subtle);
   --color-status-offline: var(--status-offline);
+  --color-status-offline-subtle: var(--status-offline-subtle);
   --color-status-maintenance: var(--status-maintenance);
+  --color-status-maintenance-subtle: var(--status-maintenance-subtle);
 
+  /* Sidebar Tokens */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
 
-  --shadow-glow:
-    0 0 0 1px color-mix(in oklab, var(--primary) 30%, transparent),
-    0 8px 32px -8px color-mix(in oklab, var(--primary) 40%, transparent);
-  --shadow-elevated:
-    0 1px 0 0 color-mix(in oklab, white 6%, transparent) inset, 0 12px 40px -12px oklch(0 0 0 / 0.6);
-  --shadow-card:
-    0 1px 0 0 color-mix(in oklab, white 4%, transparent) inset, 0 4px 16px -8px oklch(0 0 0 / 0.5);
+  /* Shadows — crisp 1px ambient boundaries, no garish glows */
+  --shadow-card: var(--shadow-card);
+  --shadow-elevated: var(--shadow-elevated);
+  --shadow-modal: var(--shadow-modal);
 
-  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
-  --gradient-surface: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
-  --gradient-p1: linear-gradient(135deg, oklch(0.62 0.24 25) 0%, oklch(0.55 0.22 15) 100%);
+  /* Transitions */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
 }
 
-/* Default = DARK (enterprise ops center) */
-:root {
-  --radius: 0.625rem;
+/* =========================================================================
+   DEFAULT = DARK THEME (Titanium Dark Operational Interface)
+   ========================================================================= */
+:root,
+:root.dark,
+.dark {
+  --font-heading: "Manrope", "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  --background: oklch(0.16 0.015 250);
-  --foreground: oklch(0.97 0.005 250);
+  --radius: 0.5rem; /* 8px */
 
-  --surface: oklch(0.185 0.017 250);
-  --surface-2: oklch(0.215 0.019 250);
-  --surface-3: oklch(0.245 0.021 250);
-  --elevated: oklch(0.23 0.02 250);
+  /* Canvas & Surfaces */
+  --background: oklch(0.145 0.015 250);        /* #0B0E14 */
+  --foreground: oklch(0.985 0.005 250);        /* #F8FAFC - crisp primary text */
 
-  --card: oklch(0.205 0.018 250);
-  --card-foreground: oklch(0.97 0.005 250);
-  --popover: oklch(0.225 0.02 250);
-  --popover-foreground: oklch(0.97 0.005 250);
+  --surface: oklch(0.175 0.020 250);           /* #121721 */
+  --surface-2: oklch(0.205 0.022 250);         /* #171E2B */
+  --surface-3: oklch(0.245 0.024 250);         /* #1E2738 */
+  --elevated: oklch(0.245 0.024 250);          /* #1E2738 */
+  --hover: oklch(0.285 0.028 250);             /* #253147 */
 
-  --primary: oklch(0.68 0.18 250);
-  --primary-foreground: oklch(0.12 0.02 250);
-  --primary-glow: oklch(0.78 0.16 220);
+  --card: oklch(0.205 0.022 250);              /* #171E2B */
+  --card-foreground: oklch(0.985 0.005 250);
+  --popover: oklch(0.245 0.024 250);           /* #1E2738 */
+  --popover-foreground: oklch(0.985 0.005 250);
 
-  --secondary: oklch(0.26 0.02 250);
-  --secondary-foreground: oklch(0.95 0.005 250);
-  --muted: oklch(0.24 0.018 250);
-  --muted-foreground: oklch(0.68 0.02 250);
-  --accent: oklch(0.28 0.03 250);
-  --accent-foreground: oklch(0.97 0.005 250);
+  /* Primary Accent: Electric Sky #38BDF8 */
+  --primary: oklch(0.76 0.14 230);
+  --primary-foreground: oklch(0.145 0.015 250); /* High contrast dark text on sky */
+  --primary-subtle: oklch(0.76 0.14 230 / 15%);
+  --primary-glow: oklch(0.76 0.14 230);        /* Fallback mapping */
 
-  --destructive: oklch(0.62 0.24 25);
-  --destructive-foreground: oklch(0.98 0.01 25);
+  --secondary: oklch(0.245 0.024 250);
+  --secondary-foreground: oklch(0.985 0.005 250);
 
+  /* Secondary text with guaranteed >= 4.5:1 contrast against all dark surfaces */
+  --muted: oklch(0.245 0.024 250);
+  --muted-foreground: oklch(0.74 0.02 250);    /* #94A3B8, contrast > 5:1 */
+  --tertiary-foreground: oklch(0.58 0.02 250); /* Subtle captions only */
+
+  --accent: oklch(0.285 0.028 250);            /* #253147 */
+  --accent-foreground: oklch(0.985 0.005 250);
+
+  --destructive: oklch(0.63 0.24 25);          /* #EF4444 */
+  --destructive-foreground: oklch(1 0 0);
+
+  /* 1px subtle architectural borders */
   --border: oklch(1 0 0 / 8%);
-  --border-strong: oklch(1 0 0 / 14%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.68 0.18 250);
+  --border-strong: oklch(1 0 0 / 16%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.76 0.14 230);
 
-  /* Priority palette — high-visibility ops colors */
-  --p1: oklch(0.62 0.24 25); /* critical red */
-  --p1-foreground: oklch(0.98 0.01 25);
-  --p2: oklch(0.72 0.19 55); /* orange */
-  --p2-foreground: oklch(0.15 0.02 55);
-  --p3: oklch(0.82 0.17 90); /* amber */
-  --p3-foreground: oklch(0.15 0.02 90);
-  --p4: oklch(0.72 0.15 220); /* blue */
-  --p4-foreground: oklch(0.12 0.02 220);
+  /* Priority Palette (Direction 3 specs) */
+  --p1: oklch(0.63 0.24 25);                   /* P1 #EF4444 */
+  --p1-foreground: oklch(1 0 0);
+  --p1-subtle: oklch(0.63 0.24 25 / 16%);
 
-  /* Fleet status palette */
-  --status-available: oklch(0.72 0.19 155);
-  --status-enroute: oklch(0.75 0.17 220);
-  --status-busy: oklch(0.72 0.19 55);
-  --status-hospital: oklch(0.76 0.15 290);
-  --status-offline: oklch(0.55 0.02 250);
-  --status-maintenance: oklch(0.82 0.17 90);
+  --p2: oklch(0.71 0.20 50);                   /* P2 #F97316 */
+  --p2-foreground: oklch(0.145 0.015 250);
+  --p2-subtle: oklch(0.71 0.20 50 / 16%);
 
-  --sidebar: oklch(0.175 0.016 250);
-  --sidebar-foreground: oklch(0.95 0.005 250);
-  --sidebar-border: oklch(1 0 0 / 6%);
-  --sidebar-accent: oklch(0.26 0.02 250);
-  --sidebar-accent-foreground: oklch(0.97 0.005 250);
+  --p3: oklch(0.82 0.17 85);                   /* P3 #FBBF24 */
+  --p3-foreground: oklch(0.145 0.015 250);
+  --p3-subtle: oklch(0.82 0.17 85 / 16%);
+
+  --p4: oklch(0.72 0.15 240);                  /* P4 #60A5FA */
+  --p4-foreground: oklch(0.145 0.015 250);
+  --p4-subtle: oklch(0.72 0.15 240 / 16%);
+
+  /* Fleet Status Palette */
+  --status-available: oklch(0.74 0.19 155);    /* #10B981 */
+  --status-available-subtle: oklch(0.74 0.19 155 / 16%);
+  --status-enroute: oklch(0.76 0.14 230);      /* #38BDF8 */
+  --status-enroute-subtle: oklch(0.76 0.14 230 / 16%);
+  --status-busy: oklch(0.71 0.20 50);          /* #F97316 */
+  --status-busy-subtle: oklch(0.71 0.20 50 / 16%);
+  --status-hospital: oklch(0.76 0.16 300);     /* #C084FC */
+  --status-hospital-subtle: oklch(0.76 0.16 300 / 16%);
+  --status-offline: oklch(0.55 0.02 250);      /* #64748B */
+  --status-offline-subtle: oklch(0.55 0.02 250 / 16%);
+  --status-maintenance: oklch(0.82 0.17 85);   /* #FBBF24 */
+  --status-maintenance-subtle: oklch(0.82 0.17 85 / 16%);
+
+  --sidebar: oklch(0.16 0.018 250);
+  --sidebar-foreground: oklch(0.985 0.005 250);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-accent: oklch(0.245 0.024 250);
+  --sidebar-accent-foreground: oklch(0.985 0.005 250);
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.35), 0 1px 2px -1px rgb(0 0 0 / 0.35);
+  --shadow-elevated: 0 4px 6px -1px rgb(0 0 0 / 0.45), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-modal: 0 20px 25px -5px rgb(0 0 0 / 0.6), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+
+  /* Z-Index Hierarchy */
+  --z-base: 0;
+  --z-card: 1;
+  --z-sticky: 100;
+  --z-drawer: 150;
+  --z-modal-backdrop: 200;
+  --z-modal: 210;
+  --z-popover: 220;
+  --z-toast: 300;
+  --z-tooltip: 400;
 }
 
-/* Optional light theme (tokens ready) */
+/* =========================================================================
+   LIGHT THEME (Daylight-Ready Clinical Operations)
+   ========================================================================= */
+:root.light,
 .light {
-  --background: oklch(0.985 0.003 250);
-  --foreground: oklch(0.16 0.02 250);
-  --surface: oklch(1 0 0);
-  --surface-2: oklch(0.975 0.005 250);
-  --surface-3: oklch(0.955 0.007 250);
-  --elevated: oklch(1 0 0);
+  --background: oklch(0.985 0.005 250);        /* #F8FAFC */
+  --foreground: oklch(0.16 0.02 250);          /* #0F172A */
+
+  --surface: oklch(1 0 0);                     /* #FFFFFF */
+  --surface-2: oklch(0.965 0.008 250);         /* #F1F5F9 */
+  --surface-3: oklch(0.925 0.012 250);         /* #E2E8F0 */
+  --elevated: oklch(1 0 0);                    /* Pure white cards */
+  --hover: oklch(0.94 0.01 250);
+
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.16 0.02 250);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.16 0.02 250);
-  --primary: oklch(0.52 0.2 250);
-  --primary-foreground: oklch(0.99 0.003 250);
-  --primary-glow: oklch(0.62 0.19 220);
-  --secondary: oklch(0.95 0.005 250);
+
+  /* Primary Accent: Clinical Cerulean Blue */
+  --primary: oklch(0.60 0.18 230);             /* #0284C7 */
+  --primary-foreground: oklch(1 0 0);          /* White text on primary */
+  --primary-subtle: oklch(0.60 0.18 230 / 12%);
+  --primary-glow: oklch(0.60 0.18 230);
+
+  --secondary: oklch(0.965 0.008 250);
   --secondary-foreground: oklch(0.16 0.02 250);
-  --muted: oklch(0.94 0.007 250);
-  --muted-foreground: oklch(0.45 0.02 250);
-  --accent: oklch(0.93 0.01 250);
+
+  /* Muted text: #475569 (> 7:1 contrast on white) */
+  --muted: oklch(0.965 0.008 250);
+  --muted-foreground: oklch(0.45 0.03 250);
+  --tertiary-foreground: oklch(0.60 0.02 250);
+
+  --accent: oklch(0.94 0.01 250);
   --accent-foreground: oklch(0.16 0.02 250);
+
+  --destructive: oklch(0.58 0.22 25);          /* #DC2626 */
+  --destructive-foreground: oklch(1 0 0);
+
   --border: oklch(0.16 0.02 250 / 10%);
-  --border-strong: oklch(0.16 0.02 250 / 18%);
-  --input: oklch(0.16 0.02 250 / 12%);
-  --ring: oklch(0.52 0.2 250);
-  --sidebar: oklch(0.98 0.005 250);
+  --border-strong: oklch(0.16 0.02 250 / 20%);
+  --input: oklch(0.16 0.02 250 / 14%);
+  --ring: oklch(0.60 0.18 230);
+
+  /* Priority Palette */
+  --p1: oklch(0.58 0.22 25);                   /* #DC2626 */
+  --p1-foreground: oklch(1 0 0);
+  --p1-subtle: oklch(0.58 0.22 25 / 12%);
+
+  --p2: oklch(0.68 0.20 50);                   /* #EA580C */
+  --p2-foreground: oklch(1 0 0);
+  --p2-subtle: oklch(0.68 0.20 50 / 12%);
+
+  --p3: oklch(0.78 0.17 85);                   /* #D97706 */
+  --p3-foreground: oklch(0.16 0.02 250);
+  --p3-subtle: oklch(0.78 0.17 85 / 14%);
+
+  --p4: oklch(0.60 0.18 240);                  /* #2563EB */
+  --p4-foreground: oklch(1 0 0);
+  --p4-subtle: oklch(0.60 0.18 240 / 12%);
+
+  /* Fleet Status Palette */
+  --status-available: oklch(0.62 0.19 155);    /* #16A34A */
+  --status-available-subtle: oklch(0.62 0.19 155 / 12%);
+  --status-enroute: oklch(0.60 0.18 230);      /* #0284C7 */
+  --status-enroute-subtle: oklch(0.60 0.18 230 / 12%);
+  --status-busy: oklch(0.68 0.20 50);          /* #EA580C */
+  --status-busy-subtle: oklch(0.68 0.20 50 / 12%);
+  --status-hospital: oklch(0.65 0.18 300);     /* #9333EA */
+  --status-hospital-subtle: oklch(0.65 0.18 300 / 12%);
+  --status-offline: oklch(0.50 0.02 250);      /* #64748B */
+  --status-offline-subtle: oklch(0.50 0.02 250 / 12%);
+  --status-maintenance: oklch(0.78 0.17 85);   /* #D97706 */
+  --status-maintenance-subtle: oklch(0.78 0.17 85 / 14%);
+
+  --sidebar: oklch(0.975 0.005 250);
   --sidebar-foreground: oklch(0.16 0.02 250);
   --sidebar-border: oklch(0.16 0.02 250 / 8%);
   --sidebar-accent: oklch(0.93 0.01 250);
   --sidebar-accent-foreground: oklch(0.16 0.02 250);
+
+  /* Light Theme Soft Shadows */
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  --shadow-elevated: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+  --shadow-modal: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.05);
 }
 
 @layer base {
@@ -190,22 +312,49 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    min-height: 100%;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-heading);
+  }
+
+  h1 {
+    letter-spacing: -0.02em;
+  }
+
+  h2,
+  h3 {
+    letter-spacing: -0.01em;
   }
 
   ::selection {
-    background: color-mix(in oklab, var(--primary) 40%, transparent);
+    background: color-mix(in oklab, var(--primary) 35%, transparent);
     color: var(--foreground);
   }
 }
 
+/* Tabular figures utility for timestamps, coordinates, counters and metrics */
+@utility tnum {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1, "zero" 1;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility transition-smooth {
+  transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 @utility glass {
-  background: color-mix(in oklab, var(--surface) 70%, transparent);
+  background: color-mix(in oklab, var(--surface) 85%, transparent);
   backdrop-filter: blur(12px) saturate(140%);
   border: 1px solid var(--border);
 }
 
 @utility panel {
-  background: var(--gradient-surface);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
@@ -218,13 +367,7 @@
   box-shadow: var(--shadow-elevated);
 }
 
-@utility text-gradient {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
+/* Pulsing rings only permitted for urgent alerts (e.g. P1 under 2 min SLA) */
 @utility pulse-dot {
   position: relative;
 }
@@ -251,18 +394,6 @@
   }
 }
 
-@keyframes marquee {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-@utility animate-marquee {
-  animation: marquee 40s linear infinite;
-}
-
 @utility input-base {
   width: 100%;
   border-radius: var(--radius-md);
@@ -286,20 +417,25 @@
   }
 }
 
-/* Leaflet dark theme overrides */
+/* Leaflet maps: Clean native tiles without artificial CSS tile inversion */
 .leaflet-container {
+  isolation: isolate;
   background: var(--surface) !important;
   font-family: var(--font-sans) !important;
 }
-.leaflet-tile {
-  filter: hue-rotate(180deg) invert(0.92) brightness(0.9) contrast(0.95) saturate(0.7);
+
+/* Scoped dark-only filter for OpenStreetMap fallback tiles (no invert / hue-rotate) */
+.dark-tile-fallback {
+  filter: brightness(0.75) contrast(1.1) saturate(0.8);
 }
+
 .leaflet-control-attribution,
 .leaflet-control-zoom a {
-  background: color-mix(in oklab, var(--surface-2) 85%, transparent) !important;
+  background: color-mix(in oklab, var(--surface-2) 90%, transparent) !important;
   color: var(--muted-foreground) !important;
   border-color: var(--border) !important;
 }
+
 .leaflet-control-zoom a {
   color: var(--foreground) !important;
 }
@@ -315,6 +451,8 @@
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

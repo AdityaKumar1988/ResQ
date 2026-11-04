@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
+import { toast } from "sonner";
 import {
   Activity,
+  AlertTriangle,
   ArrowRight,
   CheckCircle2,
-  ChevronDown,
   Clock,
   Hospital as HospitalIcon,
   Loader2,
   MapPin,
+  MoreVertical,
   Navigation,
   PhoneCall,
   Power,
@@ -21,7 +23,6 @@ import { cn } from "@/lib/utils";
 import {
   EMERGENCY_LABELS,
   INCIDENT_STATUS_LABELS,
-  PRIORITY_META,
   type IncidentStatus,
   type Incident,
 } from "@/lib/ems/types";
@@ -33,28 +34,47 @@ import {
 } from "@/hooks/fleet/use-drivers";
 import { useIncidents, useUpdateIncidentStatus } from "@/hooks/dispatch/use-incidents";
 import { useHospitals } from "@/hooks/fleet/use-hospitals";
-import { useAuth } from "@/lib/auth-context";
 import { DriverMapWrapper } from "./DriverMapWrapper";
 import { ErrorState } from "@/components/ui/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SkeletonList } from "@/components/ui/skeleton-list";
+import { PriorityBadge, StatusBadge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { MetricCard } from "@/components/ui/metric-card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const NEXT_ACTION: Record<
   IncidentStatus,
   { next: IncidentStatus; label: string; tone: "primary" | "warn" | "success" } | null
 > = {
-  reported: { next: "assigned", label: "Accept", tone: "primary" },
+  reported: { next: "assigned", label: "Accept incident", tone: "primary" },
   assigned: { next: "accepted", label: "Accept assignment", tone: "primary" },
-  accepted: { next: "en_route", label: "Roll out — en route", tone: "primary" },
+  accepted: { next: "en_route", label: "Roll out — en route to scene", tone: "primary" },
   en_route: { next: "arrived", label: "Arrived on scene", tone: "warn" },
-  arrived: { next: "patient_loaded", label: "Patient loaded", tone: "warn" },
-  patient_loaded: { next: "at_hospital", label: "Arrived at hospital", tone: "warn" },
-  at_hospital: { next: "completed", label: "Complete handoff", tone: "success" },
+  arrived: { next: "patient_loaded", label: "Patient loaded into ambulance", tone: "warn" },
+  patient_loaded: { next: "at_hospital", label: "Arrived at destination hospital", tone: "warn" },
+  at_hospital: { next: "completed", label: "Complete hospital handoff", tone: "success" },
   completed: null,
   cancelled: null,
 };
 
+const CANCELLATION_REASONS = [
+  "Vehicle breakdown / mechanical issue",
+  "Scene inaccessible / impassable route",
+  "Patient not found at pickup address",
+  "Redirected by emergency dispatch",
+  "Duplicate call / false alarm",
+  "Other operational reason",
+];
+
 export function DriverConsole() {
-  const { user } = useAuth();
   const { data: driverMe, isLoading, isError, refetch } = useDriverMe();
   const { data: incidents = [] } = useIncidents();
   const { data: hospitals = [] } = useHospitals();
@@ -73,6 +93,7 @@ export function DriverConsole() {
       ),
     [incidents, driverId],
   );
+
   const history = useMemo(
     () =>
       incidents
@@ -90,7 +111,7 @@ export function DriverConsole() {
     return () => clearInterval(t);
   }, []);
 
-  // Real geolocation watcher — sends location to backend
+  // Geolocation watcher: continuous live coordinate telemetry
   useEffect(() => {
     if (!driver) return;
     if (!navigator.geolocation) return;
@@ -108,7 +129,7 @@ export function DriverConsole() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full items-center justify-center p-6">
         <SkeletonList count={4} className="w-full max-w-sm" />
       </div>
     );
@@ -116,16 +137,20 @@ export function DriverConsole() {
 
   if (isError) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <ErrorState message="Failed to load driver data" onRetry={() => refetch()} />
+      <div className="flex h-full items-center justify-center p-6">
+        <ErrorState message="Failed to load driver console telemetry" onRetry={() => refetch()} />
       </div>
     );
   }
 
   if (!driver) {
     return (
-      <div className="flex h-full items-center justify-center p-8 text-sm text-muted-foreground">
-        No driver profile found. Ensure you are logged in as a driver.
+      <div className="flex h-full items-center justify-center p-6">
+        <EmptyState
+          icon={<Truck className="h-5 w-5" />}
+          message="No driver profile found"
+          description="Please ensure your account has the driver role assigned and is authenticated."
+        />
       </div>
     );
   }
@@ -137,90 +162,173 @@ export function DriverConsole() {
 
   const onShift = driver.status !== "offline";
 
+  function handleAdvance(status: IncidentStatus, note?: string) {
+    if (!incident) return;
+    updateIncidentStatus.mutate(
+      { id: incident.id, status, note },
+      {
+        onSuccess: () => {
+          if (status === "completed") {
+            queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all() });
+            toast.success("Mission completed and patient transferred");
+          } else if (status === "cancelled") {
+            toast.info("Mission cancelled — incident returned to dispatch");
+          } else {
+            toast.success(`Mission advanced to: ${INCIDENT_STATUS_LABELS[status]}`);
+          }
+        },
+      },
+    );
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+     COCKPIT MODE A: ACTIVE MISSION COCKPIT
+     When an active mission is assigned, secondary stats (ratings, runs, queue)
+     are strictly hidden to reduce driver distraction. The dominant map and large
+     arm's-length scannable action area take full focus.
+     ────────────────────────────────────────────────────────────────────────── */
+  if (incident) {
+    return (
+      <div className="flex h-full min-h-0 flex-col lg:flex-row gap-3 p-3">
+        {/* Dominant Navigation Map (Dominant in tablet landscape & phone portrait) */}
+        <div className="min-h-[45vh] lg:min-h-0 flex-1 relative rounded-lg overflow-hidden border border-border">
+          <DriverMapWrapper driver={driver} incident={incident} hospital={hospital} />
+        </div>
+
+        {/* Dedicated Active Mission Cockpit Panel (Arm's-length touch targets) */}
+        <div className="w-full lg:w-[400px] shrink-0 flex flex-col justify-between">
+          <ActiveMissionCockpit
+            driver={driver}
+            incident={incident}
+            hospital={hospital}
+            hospitals={hospitals}
+            driverLoc={driver.location}
+            now={now}
+            onAdvance={handleAdvance}
+            isPending={updateIncidentStatus.isPending}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────────
+     COCKPIT MODE B: STANDBY / IDLE CONSOLE
+     When no active mission is underway, show driver profile, shift toggle,
+     today's metrics, standing map, and mission history.
+     ────────────────────────────────────────────────────────────────────────── */
   return (
-    <div className="grid h-full min-h-0 grid-cols-1 gap-3 p-3 lg:grid-cols-[360px_1fr_340px]">
-      {/* Left column: driver identity + shift + queue */}
+    <div className="grid h-full min-h-0 grid-cols-1 gap-3 p-3 lg:grid-cols-[340px_1fr_320px]">
+      {/* Left Column: Driver Shift & Active Queue */}
       <div className="flex min-h-0 flex-col gap-3">
-        <DriverCard
+        <DriverProfileCard
           driver={driver}
-          drivers={[driver]}
-          onPick={() => {}} // In real mode, driver is always the logged-in user
+          onShift={onShift}
           onToggleShift={() =>
             updateDriverStatus.mutate({ status: onShift ? "offline" : "available" })
           }
-          onShift={onShift}
         />
-        <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-surface panel">
-          <div className="flex items-center justify-between border-b border-border px-3 py-2">
+
+        <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-card shadow-xs">
+          <div className="flex items-center justify-between border-b border-border px-3.5 py-2.5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <Truck className="h-3.5 w-3.5" />
-              Active queue
+              <Truck className="h-4 w-4 text-primary" />
+              <span>Assigned queue</span>
             </div>
-            <span className="rounded bg-surface-3 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-              {activeIncidents.length}
+            <span className="rounded bg-surface px-1.5 py-0.5 font-mono text-xs font-semibold tnum text-muted-foreground">
+              0
             </span>
           </div>
-          <div className="flex-1 overflow-y-auto p-2">
-            {activeIncidents.length === 0 ? (
-              <div className="p-4 text-center text-xs text-muted-foreground">
-                {onShift ? "Standing by for dispatch." : "You are off-shift."}
-              </div>
-            ) : (
-              activeIncidents.map((i) => (
-                <QueueRow key={i.id} incident={i} driverLoc={driver.location} />
-              ))
-            )}
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center text-center">
+            <Activity className="h-6 w-6 text-muted-foreground mb-2" />
+            <p className="text-xs font-medium text-foreground">
+              {onShift ? "Standing by for emergency dispatch" : "Currently off duty"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5 max-w-[200px]">
+              {onShift
+                ? "Vehicle telemetry is actively reporting to central grid."
+                : "Switch to on shift to receive sector dispatch assignments."}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Center: map + active mission */}
-      <div className="flex min-h-0 flex-col gap-3">
-        <div className="min-h-0 flex-1">
-          <DriverMapWrapper driver={driver} incident={incident} hospital={hospital} />
+      {/* Center: Standing Sector Map */}
+      <div className="flex min-h-[300px] lg:min-h-0 flex-col gap-3">
+        <div className="min-h-0 flex-1 relative rounded-lg overflow-hidden border border-border">
+          <DriverMapWrapper driver={driver} incident={null} hospital={null} />
         </div>
-        <MissionPanel
-          incident={incident}
-          hospitals={hospitals}
-          driverLoc={driver.location}
-          now={now}
-          onAdvance={(status) => {
-            updateIncidentStatus.mutate({ id: incident!.id, status });
-            if (status === "completed") {
-              queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all() });
-            }
-          }}
-          isPending={updateIncidentStatus.isPending}
-        />
+        <div className="rounded-lg border border-border bg-card p-3 shadow-xs flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "h-2.5 w-2.5 rounded-full",
+                onShift ? "bg-status-available" : "bg-status-offline",
+              )}
+            />
+            <span className="font-semibold text-foreground">
+              {onShift ? "Telemetry active · On standby" : "Offline · Geolocation paused"}
+            </span>
+          </div>
+          <span className="font-mono tnum text-xs text-muted-foreground">
+            {driver.location.lat.toFixed(4)}, {driver.location.lng.toFixed(4)}
+          </span>
+        </div>
       </div>
 
-      {/* Right: metrics + mission log */}
+      {/* Right Column: Today's Metrics & Mission History */}
       <div className="flex min-h-0 flex-col gap-3">
-        <MetricsPanel driver={driver} completed={history.length} />
-        <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-surface panel">
-          <div className="border-b border-border px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Mission log
+        <div className="grid grid-cols-2 gap-2">
+          <MetricCard label="Runs" value={history.length} icon={CheckCircle2} variant="chip" />
+          <MetricCard
+            label="Rating"
+            value={Number(driver.rating ?? 0).toFixed(1)}
+            icon={Star}
+            variant="chip"
+          />
+          <MetricCard
+            label="Avg Resp"
+            value={`${Math.round(driver.avgResponseSec / 60)}m`}
+            icon={Clock}
+            variant="chip"
+          />
+          <MetricCard
+            label="Status"
+            value={onShift ? "Available" : "Offline"}
+            icon={Activity}
+            variant="chip"
+          />
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-border bg-card shadow-xs">
+          <div className="border-b border-border px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Recent Mission Log
           </div>
           <div className="flex-1 overflow-y-auto p-2">
             {history.length === 0 ? (
               <div className="p-4 text-center text-xs text-muted-foreground">
-                No completed runs yet.
+                No completed missions recorded today.
               </div>
             ) : (
-              history.slice(0, 12).map((i) => (
+              history.slice(0, 10).map((i) => (
                 <div
                   key={i.id}
-                  className="flex items-center justify-between gap-2 rounded-md border border-transparent px-2 py-1.5 hover:border-border hover:bg-surface-2"
+                  className="flex items-center justify-between gap-2 rounded-md border border-transparent p-2 hover:border-border hover:bg-surface transition-colors"
                 >
                   <div className="min-w-0">
-                    <div className="truncate text-xs font-mono">{i.code}</div>
-                    <div className="truncate text-[10px] text-muted-foreground">
+                    <div className="truncate text-xs font-mono font-semibold text-foreground tnum">
+                      {i.code}
+                    </div>
+                    <div className="truncate text-xs text-muted-foreground">
                       {EMERGENCY_LABELS[i.type]}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <PriorityDot priority={i.priority} />
-                    <div className="mt-0.5 text-[10px] text-muted-foreground">
+                  <div className="text-right shrink-0">
+                    <PriorityBadge priority={i.priority} />
+                    <div
+                      className="mt-0.5 text-xs font-mono tnum text-muted-foreground"
+                      suppressHydrationWarning
+                    >
                       {formatRelative(i.completedAt ?? i.reportedAt, now ?? Date.now())}
                     </div>
                   </div>
@@ -234,334 +342,317 @@ export function DriverConsole() {
   );
 }
 
-function DriverCard({
+/* ──────────────────────────────────────────────────────────────────────────
+   ACTIVE MISSION COCKPIT COMPONENT
+   Optimized for arm's-length interaction, large typography, high-contrast,
+   and zero secondary distraction.
+   ────────────────────────────────────────────────────────────────────────── */
+function ActiveMissionCockpit({
   driver,
-  drivers,
-  onPick,
-  onToggleShift,
-  onShift,
-}: {
-  driver: import("@/lib/ems/types").Driver;
-  drivers: import("@/lib/ems/types").Driver[];
-  onPick: (id: string) => void;
-  onToggleShift: () => void;
-  onShift: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative rounded-lg border border-border bg-surface p-3 panel">
-      <div className="flex items-center gap-3">
-        <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/70 to-primary text-primary-foreground shadow-glow">
-          <UserCircle2 className="h-6 w-6" />
-          <span
-            className={cn(
-              "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-surface",
-              onShift ? "bg-status-available" : "bg-status-offline",
-            )}
-          />
-        </div>
-        <div className="min-w-0 flex-1 leading-tight">
-          <div className="truncate text-sm font-semibold">{driver.name}</div>
-          <div className="truncate text-[11px] text-muted-foreground">
-            <span className="font-mono">{driver.callSign}</span> ·{" "}
-            <span className="uppercase tracking-wider">{onShift ? "on shift" : "off shift"}</span>
-          </div>
-        </div>
-        {drivers.length > 1 && (
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            className="flex h-8 items-center gap-1 rounded-md border border-border bg-surface-2 px-2 text-[11px] font-medium hover:bg-accent"
-          >
-            Switch <ChevronDown className="h-3 w-3" />
-          </button>
-        )}
-      </div>
-
-      {open && (
-        <div className="absolute left-3 right-3 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-surface-2 p-1 shadow-xl">
-          {drivers.map((d) => (
-            <button
-              key={d.id}
-              type="button"
-              onClick={() => {
-                onPick(d.id);
-                setOpen(false);
-              }}
-              className={cn(
-                "flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-xs hover:bg-accent",
-                d.id === driver.id && "bg-accent",
-              )}
-            >
-              <span className="font-mono text-[10px] text-muted-foreground">{d.callSign}</span>
-              <span className="truncate">{d.name}</span>
-              <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground">
-                {d.status.replace("_", " ")}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-        <MiniStat icon={Star} label="Rating" value={Number(driver.rating ?? 0).toFixed(1)} />
-        <MiniStat icon={CheckCircle2} label="Runs" value={driver.missionsCompleted} />
-        <MiniStat
-          icon={Clock}
-          label="Avg resp"
-          value={`${Math.round(driver.avgResponseSec / 60)}m`}
-        />
-      </div>
-
-      <button
-        type="button"
-        onClick={onToggleShift}
-        className={cn(
-          "mt-3 flex w-full items-center justify-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-colors",
-          onShift
-            ? "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20"
-            : "border-status-available/40 bg-status-available/10 text-status-available hover:bg-status-available/20",
-        )}
-      >
-        <Power className="h-3.5 w-3.5" />
-        {onShift ? "Go off shift" : "Go on shift"}
-      </button>
-    </div>
-  );
-}
-
-function MiniStat({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string | number;
-}) {
-  return (
-    <div className="rounded-md border border-border bg-surface-2 px-1 py-1.5">
-      <Icon className="mx-auto h-3 w-3 text-muted-foreground" />
-      <div className="mt-0.5 text-sm font-semibold tabular-nums">{value}</div>
-      <div className="text-[9px] uppercase tracking-widest text-muted-foreground">{label}</div>
-    </div>
-  );
-}
-
-function QueueRow({
   incident,
-  driverLoc,
-}: {
-  incident: Incident;
-  driverLoc: { lat: number; lng: number };
-}) {
-  const dist = haversineKm(driverLoc, incident.location);
-  const meta = PRIORITY_META[incident.priority];
-  return (
-    <div className="mb-1.5 rounded-md border border-border bg-surface-2/60 p-2">
-      <div className="flex items-center gap-2">
-        <span
-          className={cn(
-            "rounded px-1.5 py-0.5 font-mono text-[10px] font-bold",
-            `bg-priority-${meta.token}/15 text-priority-${meta.token}`,
-          )}
-        >
-          {incident.priority}
-        </span>
-        <span className="font-mono text-[11px]">{incident.code}</span>
-        <span className="ml-auto text-[10px] uppercase tracking-wider text-muted-foreground">
-          {INCIDENT_STATUS_LABELS[incident.status]}
-        </span>
-      </div>
-      <div className="mt-1 truncate text-xs">{EMERGENCY_LABELS[incident.type]}</div>
-      <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
-        <MapPin className="h-3 w-3" />
-        <span className="truncate">{incident.address}</span>
-        <span className="ml-auto shrink-0 tabular-nums">
-          {dist.toFixed(1)} km · {etaMinutes(dist)}m
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function MissionPanel({
-  incident,
+  hospital,
   hospitals,
   driverLoc,
   now,
   onAdvance,
   isPending,
 }: {
-  incident: Incident | null;
+  driver: import("@/lib/ems/types").Driver;
+  incident: Incident;
+  hospital: { id: string; name: string } | null;
   hospitals: { id: string; name: string; location: { lat: number; lng: number } }[];
   driverLoc: { lat: number; lng: number };
   now: number | null;
-  onAdvance: (status: IncidentStatus) => void;
+  onAdvance: (status: IncidentStatus, note?: string) => void;
   isPending: boolean;
 }) {
-  if (!incident) {
-    return (
-      <div className="flex items-center gap-3 rounded-lg border border-dashed border-border bg-surface/60 px-4 py-3 text-xs text-muted-foreground">
-        <Activity className="h-4 w-4" />
-        Awaiting dispatch. Keep radio channel open.
-      </div>
-    );
-  }
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState(CANCELLATION_REASONS[0]);
+
   const action = NEXT_ACTION[incident.status];
-  const meta = PRIORITY_META[incident.priority];
+
   const target =
     incident.status === "patient_loaded" && incident.hospitalId
       ? (hospitals.find((h) => h.id === incident.hospitalId)?.location ?? incident.location)
       : incident.location;
+
   const dist = haversineKm(driverLoc, target);
   const eta = etaMinutes(dist);
 
+  function confirmCancel() {
+    // BACKEND DEPENDENCY NOTE: The backend statusSchema accepts optional 'note' but does not have a dedicated 'cancellationReason' enum field. The selected reason is passed in 'note'.
+    onAdvance("cancelled", cancelReason);
+    setCancelDialogOpen(false);
+  }
+
   return (
-    <div className="rounded-lg border border-border bg-surface p-3 panel">
-      <div className="flex items-start gap-3">
-        <div
-          className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg font-mono text-sm font-bold",
-            `bg-priority-${meta.token}/15 text-priority-${meta.token}`,
-          )}
-        >
-          {incident.priority}
-        </div>
-        <div className="min-w-0 flex-1">
+    <div className="flex h-full flex-col justify-between rounded-lg border border-border bg-card p-4 shadow-sm">
+      {/* Top Section: Header & Mission Summary */}
+      <div className="space-y-3">
+        {/* Unit & Incident Header */}
+        <div className="flex items-center justify-between pb-2 border-b border-border">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs">{incident.code}</span>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              {INCIDENT_STATUS_LABELS[incident.status]}
-            </span>
-            <span className="ml-auto text-[10px] text-muted-foreground">
-              reported {formatRelative(incident.reportedAt, now ?? Date.now())}
-            </span>
+            <span className="font-mono text-sm font-bold text-primary tnum">{driver.callSign}</span>
+            <span className="text-muted-foreground">·</span>
+            <span className="font-mono text-xs text-muted-foreground tnum">{incident.code}</span>
           </div>
-          <div className="mt-0.5 truncate text-sm font-semibold">
+
+          <div className="flex items-center gap-2">
+            <PriorityBadge priority={incident.priority} />
+            <StatusBadge status={incident.status} />
+
+            {/* Overflow Cancel Action (Step 1 of 2 deliberate steps) */}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setCancelDialogOpen(true)}
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+              title="Mission options"
+              aria-label="Mission options"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Emergency Type & Patient Identification (Large & High-contrast) */}
+        <div>
+          <div className="text-xl sm:text-2xl font-bold text-foreground leading-tight">
             {EMERGENCY_LABELS[incident.type]}
           </div>
-          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <MapPin className="h-3 w-3" />
-            <span className="truncate">{incident.address}</span>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+            <span>Reported {now ? formatRelative(incident.reportedAt, now) : "…"}</span>
           </div>
-          {incident.notes && (
-            <div className="mt-1 rounded border border-border bg-surface-2 p-1.5 text-[11px] text-muted-foreground">
-              “{incident.notes}”
+        </div>
+
+        {/* Location / Pickup Address */}
+        <div className="rounded-md border border-border bg-surface p-3">
+          <div className="flex items-start gap-2.5">
+            <MapPin className="h-4 w-4 text-priority-p1 shrink-0 mt-0.5" />
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+                {incident.status === "patient_loaded" ? "Destination Hospital" : "Pickup Location"}
+              </div>
+              <div className="text-sm font-semibold text-foreground mt-0.5 leading-snug">
+                {incident.status === "patient_loaded" && hospital
+                  ? hospital.name
+                  : incident.address}
+              </div>
             </div>
+          </div>
+        </div>
+
+        {/* Large Scannable Navigation Metrics (Arm's-length readable) */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="rounded-md border border-border bg-surface p-3">
+            <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+              <Navigation className="h-3.5 w-3.5 text-primary" />
+              <span>Distance</span>
+            </div>
+            <div className="mt-1 text-2xl font-bold font-mono tnum text-foreground">
+              {dist.toFixed(1)}{" "}
+              <span className="text-xs font-normal text-muted-foreground">km</span>
+            </div>
+          </div>
+
+          <div className="rounded-md border border-border bg-surface p-3">
+            <div className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+              <Clock className="h-3.5 w-3.5 text-primary" />
+              <span>ETA</span>
+            </div>
+            <div className="mt-1 text-2xl font-bold font-mono tnum text-primary">
+              {eta} <span className="text-xs font-normal text-muted-foreground">min</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Patient / Hospital Contact Strip */}
+        <div className="flex items-center justify-between rounded-md border border-border bg-surface p-3">
+          <div className="min-w-0 flex-1 pr-2">
+            <div className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+              {incident.status === "patient_loaded" ? "Receiving Facility" : "Patient Contact"}
+            </div>
+            <div className="text-sm font-semibold text-foreground truncate mt-0.5">
+              {incident.status === "patient_loaded" && hospital
+                ? hospital.name
+                : incident.citizenName || "Emergency Caller"}
+            </div>
+          </div>
+
+          {incident.citizenPhone && incident.status !== "patient_loaded" && (
+            <a
+              href={`tel:${incident.citizenPhone.replace(/\D/g, "")}`}
+              className="flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-card text-foreground hover:bg-elevated hover:text-primary transition-colors min-h-[44px] min-w-[44px]"
+              aria-label="Call patient"
+            >
+              <PhoneCall className="h-4 w-4" />
+            </a>
           )}
         </div>
+
+        {/* Scene Notes Callout (if present) */}
+        {incident.notes && (
+          <div className="rounded-md border border-border bg-surface p-2.5 text-xs text-muted-foreground leading-relaxed">
+            <span className="font-semibold text-foreground">Notes: </span>“{incident.notes}”
+          </div>
+        )}
       </div>
 
-      <div className="mt-3 grid grid-cols-4 gap-2">
-        <NavStat icon={Navigation} label="Distance" value={`${dist.toFixed(1)} km`} />
-        <NavStat icon={Clock} label="ETA" value={`${eta} min`} />
-        <NavStat
-          icon={incident.status === "patient_loaded" ? HospitalIcon : UserCircle2}
-          label={incident.status === "patient_loaded" ? "To hospital" : "Patient"}
-          value={
-            incident.status === "patient_loaded"
-              ? (hospitals.find((h) => h.id === incident.hospitalId)?.name.split(" ")[0] ?? "—")
-              : (incident.citizenName ?? "—").split(" ")[0]
-          }
-        />
-        <NavStat
-          icon={PhoneCall}
-          label="Contact"
-          value={(incident.citizenPhone ?? "—").slice(-4)}
-        />
-      </div>
-
-      {action && (
-        <div className="mt-3 flex items-center gap-2">
+      {/* Bottom Section: Primary Full-Width Action Button (≥ 56px height) */}
+      <div className="mt-4 pt-3 border-t border-border space-y-2">
+        {action ? (
           <button
             type="button"
             onClick={() => onAdvance(action.next)}
             disabled={isPending}
             className={cn(
-              "flex-1 rounded-md px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-60",
+              "w-full flex items-center justify-center gap-2 rounded-lg px-4 py-4 min-h-[56px] text-base sm:text-lg font-bold transition-all shadow-sm active:scale-[0.99] disabled:opacity-60",
               action.tone === "primary" &&
-                "bg-primary text-primary-foreground shadow-glow hover:opacity-90",
-              action.tone === "warn" && "bg-status-enroute text-background hover:opacity-90",
-              action.tone === "success" && "bg-status-available text-background hover:opacity-90",
+                "bg-primary text-primary-foreground hover:brightness-105",
+              action.tone === "warn" && "bg-status-enroute text-slate-950 hover:brightness-105",
+              action.tone === "success" &&
+                "bg-status-available text-slate-950 hover:brightness-105",
             )}
           >
-            <span className="inline-flex items-center gap-2">
-              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              {action.label}
-              <ArrowRight className="h-4 w-4" />
-            </span>
+            {isPending && <Loader2 className="h-5 w-5 animate-spin mr-1" />}
+            <span>{action.label}</span>
+            <ArrowRight className="h-5 w-5" />
           </button>
+        ) : (
+          <div className="text-center py-3 text-xs text-muted-foreground font-semibold">
+            Mission stage completed
+          </div>
+        )}
+
+        <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
+          <span>Tap to advance next operational milestone</span>
           <button
             type="button"
-            onClick={() => onAdvance("cancelled")}
-            disabled={isPending}
-            className="rounded-md border border-border bg-surface-2 px-3 py-2.5 text-xs font-medium text-muted-foreground hover:bg-accent disabled:opacity-60"
+            onClick={() => setCancelDialogOpen(true)}
+            className="hover:underline hover:text-destructive focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-destructive rounded"
           >
-            Cancel
+            Cancel mission…
           </button>
         </div>
-      )}
-    </div>
-  );
-}
-
-function NavStat({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-md border border-border bg-surface-2 px-2 py-1.5">
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-        <Icon className="h-3 w-3" />
-        {label}
       </div>
-      <div className="mt-0.5 truncate text-sm font-semibold tabular-nums">{value}</div>
+
+      {/* Confirmation Dialog: Step 2 of 2 deliberate steps to cancel */}
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              <DialogTitle>Cancel Assigned Mission?</DialogTitle>
+            </div>
+            <DialogDescription className="text-xs text-muted-foreground pt-1">
+              Cancelling will detach your unit from incident{" "}
+              <span className="font-mono font-semibold text-foreground">{incident.code}</span> and
+              notify central dispatchers to reassign the call.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <label className="text-xs font-semibold text-foreground block">
+              Reason for mission cancellation (mandatory):
+            </label>
+            <div className="space-y-1.5">
+              {CANCELLATION_REASONS.map((reason) => (
+                <label
+                  key={reason}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-md border p-2.5 text-xs cursor-pointer transition-colors",
+                    cancelReason === reason
+                      ? "border-primary bg-primary/10 text-foreground font-medium"
+                      : "border-border bg-surface text-muted-foreground hover:bg-elevated",
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="cancelReason"
+                    checked={cancelReason === reason}
+                    onChange={() => setCancelReason(reason)}
+                    className="h-4 w-4 text-primary"
+                  />
+                  <span>{reason}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" onClick={() => setCancelDialogOpen(false)}>
+              Keep Mission
+            </Button>
+            <Button type="button" variant="destructive" onClick={confirmCancel}>
+              Confirm Mission Cancellation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function MetricsPanel({
+/* ──────────────────────────────────────────────────────────────────────────
+   DRIVER PROFILE & SHIFT COMPONENT (STANDBY MODE)
+   ────────────────────────────────────────────────────────────────────────── */
+function DriverProfileCard({
   driver,
-  completed,
+  onShift,
+  onToggleShift,
 }: {
   driver: import("@/lib/ems/types").Driver;
-  completed: number;
+  onShift: boolean;
+  onToggleShift: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-surface p-3 panel">
-      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Today
+    <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
+      <div className="flex items-center gap-3">
+        <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary border border-primary/20">
+          <UserCircle2 className="h-6 w-6" />
+          <span
+            className={cn(
+              "absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-card",
+              onShift ? "bg-status-available" : "bg-status-offline",
+            )}
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-semibold text-foreground">{driver.name}</div>
+          <div className="truncate text-xs text-muted-foreground mt-0.5">
+            <span className="font-mono font-semibold text-primary">{driver.callSign}</span> ·{" "}
+            <span className="uppercase tracking-wider">{onShift ? "On Shift" : "Off Duty"}</span>
+          </div>
+        </div>
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-2">
-        <MiniStat icon={CheckCircle2} label="Runs" value={completed} />
-        <MiniStat icon={Star} label="Rating" value={Number(driver.rating ?? 0).toFixed(2)} />
-        <MiniStat
-          icon={Clock}
-          label="Avg resp"
-          value={`${Math.round(driver.avgResponseSec / 60)}m`}
-        />
-        <MiniStat icon={Activity} label="Status" value={driver.status.replace("_", " ")} />
-      </div>
-    </div>
-  );
-}
 
-function PriorityDot({ priority }: { priority: keyof typeof PRIORITY_META }) {
-  const meta = PRIORITY_META[priority];
-  return (
-    <span
-      className={cn(
-        "inline-flex rounded px-1.5 py-0.5 font-mono text-[9px] font-bold",
-        `bg-priority-${meta.token}/15 text-priority-${meta.token}`,
+      {!driver.vehicleId && (
+        <div className="mt-3 rounded-md border border-priority-p2/40 bg-priority-p2/10 p-2.5 text-xs text-foreground">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 text-priority-p2 shrink-0 mt-0.5" />
+            <div className="space-y-0.5 leading-snug">
+              <span className="font-semibold text-priority-p2">No Ambulance Linked</span>
+              <p className="text-muted-foreground">
+                No ambulance asset linked to crew profile. Contact fleet dispatcher to assign a
+                vehicle.
+              </p>
+            </div>
+          </div>
+        </div>
       )}
-    >
-      {priority}
-    </span>
+
+      <Button
+        type="button"
+        variant={onShift ? "outline" : "primary"}
+        onClick={onToggleShift}
+        className={cn(
+          "mt-3.5 w-full min-h-[44px] text-xs font-semibold uppercase tracking-wider",
+          onShift && "border-destructive/40 text-destructive hover:bg-destructive/10",
+        )}
+      >
+        <Power className="h-3.5 w-3.5 mr-2" />
+        {onShift ? "Go off shift" : "Go on shift"}
+      </Button>
+    </div>
   );
 }

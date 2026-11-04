@@ -77,6 +77,7 @@ export function createApp() {
 
   app.use("/api/auth", authLimiter, authRoutes);
   app.use("/api/users", userRoutes);
+  app.use("/api/admin/users", userRoutes);
   app.use("/api/drivers", driverRoutes);
   app.use("/api/vehicles", vehicleRoutes);
   app.use("/api/hospitals", hospitalRoutes);

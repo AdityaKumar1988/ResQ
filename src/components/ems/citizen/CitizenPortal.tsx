@@ -1,68 +1,69 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { toast } from "sonner";
 import {
   AlertCircle,
+  Baby,
+  Brain,
+  Check,
+  CheckCircle2,
   Clock,
+  Crosshair,
+  Edit2,
+  Flame,
+  HeartPulse,
   History,
   LifeBuoy,
   Loader2,
   MapPin,
   Phone,
+  Radio,
   Send,
+  ShieldAlert,
   Sparkles,
   User,
+  Users,
+  Wind,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  EMERGENCY_LABELS,
-  INCIDENT_STATUS_LABELS,
-  PRIORITY_META,
-  type EmergencyType,
-  type Priority,
-} from "@/lib/ems/types";
+import { EMERGENCY_LABELS, INCIDENT_STATUS_LABELS, type EmergencyType } from "@/lib/ems/types";
 import type { Incident } from "@/types/incident";
-import type { Driver } from "@/types/driver";
 import { etaMinutes, formatRelative, haversineKm } from "@/lib/ems/geo";
-import { priorityClasses } from "@/lib/ems/style";
 import { useCitizenIdentity } from "@/lib/ems/citizen-identity";
 import {
   useIncidents,
   useCreateIncident,
-  useAssignDriver,
   useDispatchEstimate,
 } from "@/hooks/dispatch/use-incidents";
 import { useHospitals } from "@/hooks/fleet/use-hospitals";
 import { useAuth } from "@/lib/auth-context";
 import { CitizenMapWrapper } from "./CitizenMapWrapper";
 import { ErrorState } from "@/components/ui/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SkeletonList } from "@/components/ui/skeleton-list";
+import { StatusBadge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 type Tab = "report" | "track" | "history";
 
-const TYPES: EmergencyType[] = [
-  "cardiac",
-  "trauma",
-  "stroke",
-  "respiratory",
-  "obstetric",
-  "pediatric",
-  "psychiatric",
-  "burn",
-  "other",
+const EMERGENCY_TILES: {
+  type: EmergencyType;
+  label: string;
+  hint: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
+  { type: "cardiac", label: "Cardiac Arrest", hint: "Chest pain / heart", icon: HeartPulse },
+  { type: "trauma", label: "Trauma / Accident", hint: "Severe injury / crash", icon: ShieldAlert },
+  { type: "stroke", label: "Stroke Symptoms", hint: "Facial droop / numbness", icon: Brain },
+  { type: "respiratory", label: "Respiratory", hint: "Severe breathing distress", icon: Wind },
+  { type: "obstetric", label: "Obstetric", hint: "Labor / pregnancy issue", icon: Baby },
+  { type: "pediatric", label: "Pediatric", hint: "Child medical emergency", icon: Users },
+  { type: "psychiatric", label: "Psychiatric", hint: "Acute distress / crisis", icon: Sparkles },
+  { type: "burn", label: "Burn Injury", hint: "Thermal / chemical burn", icon: Flame },
+  { type: "other", label: "Other Emergency", hint: "General acute distress", icon: AlertCircle },
 ];
-const PRIORITIES: Priority[] = ["P1", "P2", "P3", "P4"];
-
-const TYPE_TO_PRIORITY: Record<EmergencyType, Priority> = {
-  cardiac: "P1",
-  stroke: "P1",
-  trauma: "P2",
-  respiratory: "P2",
-  obstetric: "P2",
-  burn: "P2",
-  pediatric: "P3",
-  psychiatric: "P3",
-  other: "P4",
-};
 
 export function CitizenPortal() {
   const [citizen, updateCitizen] = useCitizenIdentity();
@@ -77,18 +78,21 @@ export function CitizenPortal() {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, []);
+
   const myIncidents = useMemo(
     () => incidents.filter((i) => i.citizenUserId === user?.id),
     [incidents, user],
   );
+
   const activeIncident: Incident | null = useMemo(() => {
     if (activeIncidentId) return incidents.find((i) => i.id === activeIncidentId) ?? null;
     const active = myIncidents.find((i) => i.status !== "completed" && i.status !== "cancelled");
     return active ?? null;
   }, [activeIncidentId, incidents, myIncidents]);
+
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full items-center justify-center p-6">
         <SkeletonList count={3} className="w-full max-w-md" />
       </div>
     );
@@ -96,74 +100,120 @@ export function CitizenPortal() {
 
   if (isError) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <ErrorState message="Failed to load data. Please try again." onRetry={() => refetch()} />
+      <div className="flex h-full items-center justify-center p-6">
+        <ErrorState
+          message="Failed to load emergency data. Please retry."
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col gap-3 p-3">
+    <div className="flex h-full flex-col gap-3 p-3 max-w-6xl mx-auto w-full">
       <CitizenHeader citizen={citizen} onUpdate={updateCitizen} />
 
-      <div className="flex gap-1 rounded-md border border-border bg-surface-2/60 p-1 self-start">
-        <TabBtn
-          active={tab === "report"}
+      {/* Accessible Navigation Tablist */}
+      <div
+        role="tablist"
+        aria-label="Citizen portal navigation"
+        className="flex gap-1 rounded-lg border border-border bg-card p-1 self-start shadow-xs"
+      >
+        <button
+          role="tab"
+          id="tab-report"
+          aria-selected={tab === "report"}
+          aria-controls="panel-report"
+          tabIndex={tab === "report" ? 0 : -1}
           onClick={() => setTab("report")}
-          icon={<AlertCircle className="h-3.5 w-3.5" />}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-3.5 py-2 text-xs font-medium transition-colors min-h-[44px]",
+            tab === "report"
+              ? "bg-elevated text-foreground shadow-xs"
+              : "text-muted-foreground hover:text-foreground",
+          )}
         >
-          Report emergency
-        </TabBtn>
-        <TabBtn
-          active={tab === "track"}
+          <AlertCircle className="h-4 w-4 text-priority-p1" />
+          <span>Request ambulance</span>
+        </button>
+
+        <button
+          role="tab"
+          id="tab-track"
+          aria-selected={tab === "track"}
+          aria-controls="panel-track"
+          tabIndex={tab === "track" ? 0 : -1}
           onClick={() => setTab("track")}
-          icon={<LifeBuoy className="h-3.5 w-3.5" />}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-3.5 py-2 text-xs font-medium transition-colors min-h-[44px]",
+            tab === "track"
+              ? "bg-elevated text-foreground shadow-xs"
+              : "text-muted-foreground hover:text-foreground",
+          )}
         >
-          Live tracking
+          <Radio className="h-4 w-4 text-primary" />
+          <span>Live tracking</span>
           {activeIncident && (
-            <span className="ml-1 rounded bg-primary/20 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-primary">
+            <span className="ml-1 rounded bg-primary/15 px-1.5 py-0.5 font-mono text-[11px] font-bold uppercase text-primary">
               LIVE
             </span>
           )}
-        </TabBtn>
-        <TabBtn
-          active={tab === "history"}
+        </button>
+
+        <button
+          role="tab"
+          id="tab-history"
+          aria-selected={tab === "history"}
+          aria-controls="panel-history"
+          tabIndex={tab === "history" ? 0 : -1}
           onClick={() => setTab("history")}
-          icon={<History className="h-3.5 w-3.5" />}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-3.5 py-2 text-xs font-medium transition-colors min-h-[44px]",
+            tab === "history"
+              ? "bg-elevated text-foreground shadow-xs"
+              : "text-muted-foreground hover:text-foreground",
+          )}
         >
-          History
-          <span className="ml-1 rounded bg-surface-3 px-1.5 py-0.5 font-mono text-[9px] text-muted-foreground">
+          <History className="h-4 w-4" />
+          <span>History</span>
+          <span className="ml-1 rounded bg-surface px-1.5 py-0.5 font-mono text-xs tnum text-muted-foreground">
             {myIncidents.length}
           </span>
-        </TabBtn>
+        </button>
       </div>
 
       <div className="min-h-0 flex-1">
         {tab === "report" && (
-          <ReportForm
-            citizen={citizen}
-            onDispatched={(id) => {
-              setActiveIncidentId(id);
-              setTab("track");
-            }}
-          />
+          <div role="tabpanel" id="panel-report" aria-labelledby="tab-report" className="h-full">
+            <ReportForm
+              citizen={citizen}
+              onDispatched={(id) => {
+                setActiveIncidentId(id);
+                setTab("track");
+              }}
+            />
+          </div>
         )}
         {tab === "track" && (
-          <TrackPanel
-            incident={activeIncident}
-            citizen={citizen}
-            now={now}
-            onReport={() => setTab("report")}
-          />
+          <div role="tabpanel" id="panel-track" aria-labelledby="tab-track" className="h-full">
+            <TrackPanel
+              incident={activeIncident}
+              citizen={citizen}
+              now={now}
+              onReport={() => setTab("report")}
+            />
+          </div>
         )}
         {tab === "history" && (
-          <HistoryList
-            incidents={myIncidents}
-            onSelect={(id) => {
-              setActiveIncidentId(id);
-              setTab("track");
-            }}
-          />
+          <div role="tabpanel" id="panel-history" aria-labelledby="tab-history" className="h-full">
+            <HistoryList
+              incidents={myIncidents}
+              onSelect={(id) => {
+                setActiveIncidentId(id);
+                setTab("track");
+              }}
+            />
+          </div>
         )}
       </div>
     </div>
@@ -178,83 +228,78 @@ function CitizenHeader({
   onUpdate: (patch: Partial<typeof citizen>) => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(citizen.name);
+  const [phone, setPhone] = useState(citizen.phone);
+  const [address, setAddress] = useState(citizen.address);
+
+  function handleSave() {
+    onUpdate({ name, phone, address });
+    setEditing(false);
+    toast.success("Profile updated");
+  }
+
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-surface panel px-4 py-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary">
+    <header className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-xs">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20">
         <User className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
         {editing ? (
-          <div className="grid gap-1.5 sm:grid-cols-3">
-            <input
-              className="rounded-md border border-border bg-surface-2 px-2 py-1 text-xs"
-              value={citizen.name}
-              onChange={(e) => onUpdate({ name: e.target.value })}
-              placeholder="Name"
+          <div className="grid gap-2 sm:grid-cols-3">
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your name"
+              aria-label="Your name"
             />
-            <input
-              className="rounded-md border border-border bg-surface-2 px-2 py-1 text-xs"
-              value={citizen.phone}
-              onChange={(e) => onUpdate({ phone: e.target.value })}
-              placeholder="Phone"
+            <Input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Contact phone"
+              aria-label="Contact phone"
             />
-            <input
-              className="rounded-md border border-border bg-surface-2 px-2 py-1 text-xs"
-              value={citizen.address}
-              onChange={(e) => onUpdate({ address: e.target.value })}
-              placeholder="Address"
+            <Input
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Home address"
+              aria-label="Home address"
             />
           </div>
         ) : (
           <>
-            <div className="truncate text-sm font-semibold">{citizen.name}</div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Phone className="h-3 w-3" />
-                {citizen.phone}
+            <div className="truncate text-sm font-semibold text-foreground">{citizen.name}</div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground mt-0.5">
+              <span className="flex items-center gap-1.5">
+                <Phone className="h-3.5 w-3.5 text-primary" />
+                <span className="font-mono tnum">{citizen.phone}</span>
               </span>
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                {citizen.address}
+              <span className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-priority-p1" />
+                <span className="truncate">{citizen.address}</span>
               </span>
             </div>
           </>
         )}
       </div>
-      <button
-        onClick={() => setEditing((v) => !v)}
-        className="rounded-md border border-border bg-surface-2 px-2.5 py-1 text-[11px] hover:bg-surface-3"
-      >
-        {editing ? "Done" : "Edit profile"}
-      </button>
-    </div>
-  );
-}
-
-function TabBtn({
-  active,
-  onClick,
-  icon,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors",
-        active
-          ? "bg-surface-3 text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground",
-      )}
-    >
-      {icon}
-      {children}
-    </button>
+      <div className="shrink-0 flex items-center gap-2">
+        {editing ? (
+          <>
+            <Button size="sm" variant="outline" onClick={() => setEditing(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" variant="primary" onClick={handleSave}>
+              <Check className="h-3.5 w-3.5 mr-1" />
+              Save
+            </Button>
+          </>
+        ) : (
+          <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+            <Edit2 className="h-3.5 w-3.5 mr-1" />
+            Edit profile
+          </Button>
+        )}
+      </div>
+    </header>
   );
 }
 
@@ -267,226 +312,316 @@ function ReportForm({
 }) {
   const { user } = useAuth();
   const createMutation = useCreateIncident();
-  const assignMutation = useAssignDriver();
   const [type, setType] = useState<EmergencyType>("cardiac");
-  const [priority, setPriority] = useState<Priority>(TYPE_TO_PRIORITY.cardiac);
   const [address, setAddress] = useState(citizen.address);
+  const [phone, setPhone] = useState(citizen.phone || user?.phone || "");
   const [notes, setNotes] = useState("");
-
   const [location, setLocation] = useState(citizen.location);
+  const [gpsStatus, setGpsStatus] = useState<"acquiring" | "locked" | "unavailable">("acquiring");
+  const hasRequestedGpsRef = useRef(false);
 
-  useEffect(() => {
+  const detectLocation = () => {
     if (!navigator.geolocation) {
-      toast.error("Geolocation is not supported by this browser.");
+      setGpsStatus("unavailable");
+      toast.error("Geolocation is not supported by your browser.", { id: "gps-error" });
       return;
     }
 
+    setGpsStatus("acquiring");
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
         });
+        setGpsStatus("locked");
+        toast.success("Current GPS location acquired", { id: "gps-acquired" });
       },
       () => {
-        toast.error("Unable to access your location.");
+        setGpsStatus("unavailable");
+        toast.error("Unable to read GPS location. Please verify your address manually.", {
+          id: "gps-error",
+        });
       },
-      {
-        enableHighAccuracy: true,
-      },
+      { enableHighAccuracy: true, timeout: 10000 },
     );
+  };
+
+  useEffect(() => {
+    if (hasRequestedGpsRef.current) return;
+    hasRequestedGpsRef.current = true;
+    detectLocation();
   }, []);
 
   const { data: estimate, isLoading: isLoadingEstimate } = useDispatchEstimate({
     lat: location.lat,
     lng: location.lng,
-    priority,
   });
 
-  function handleType(t: EmergencyType) {
-    setType(t);
-    setPriority(TYPE_TO_PRIORITY[t]);
-  }
-
-  async function handleSubmit() {
-    if (!address) {
-      toast.error("Please confirm your address");
+  async function handleSubmit(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if (!address.trim()) {
+      toast.error("Please provide or confirm the emergency address");
       return;
     }
+
+    if (
+      !location ||
+      typeof location.lat !== "number" ||
+      typeof location.lng !== "number" ||
+      isNaN(location.lat) ||
+      isNaN(location.lng) ||
+      (location.lat === 0 && location.lng === 0)
+    ) {
+      toast.error(
+        "Valid GPS coordinates are required to dispatch emergency units. Please click 'Refresh GPS' or enable browser location services.",
+      );
+      return;
+    }
+
     try {
       const result = await createMutation.mutateAsync({
-        priority,
         type,
         lat: location.lat,
         lng: location.lng,
-        address,
-        notes: notes || undefined,
+        address: address.trim(),
+        notes: notes.trim() || undefined,
         citizenName: citizen.name || user?.name || "Citizen",
-        citizenPhone: citizen.phone || user?.phone || "",
+        citizenPhone: phone.trim() || citizen.phone || user?.phone || "",
       });
-      toast.success("Emergency reported — dispatchers notified");
+      toast.success("Emergency dispatched — units notified");
       onDispatched(result.incident.id);
     } catch {
-      // Error already toasted by mutation handler
+      // Error handled by mutation
     }
   }
 
-  const isPending = createMutation.isPending || assignMutation.isPending;
-  const cls = priorityClasses(priority);
+  const isPending = createMutation.isPending;
 
   return (
-    <div className="grid h-full min-h-0 gap-3 md:grid-cols-[1fr_320px]">
-      <div className="min-h-0 space-y-4 overflow-y-auto rounded-lg border border-border bg-surface panel p-5">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-p1/20 text-p1">
-            <AlertCircle className="h-4 w-4" />
-          </div>
-          <div>
-            <h2 className="text-sm font-semibold">Request emergency response</h2>
-            <p className="text-[11px] text-muted-foreground">
-              A dispatcher and the nearest ambulance are notified immediately.
-            </p>
-          </div>
-        </div>
-
+    <form
+      onSubmit={handleSubmit}
+      className="grid h-full min-h-0 gap-4 lg:grid-cols-[1fr_340px] overflow-y-auto"
+    >
+      {/* Primary Flow: Category -> Location -> Optional Details */}
+      <div className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-xs">
+        {/* Step 1: Emergency Type Grid (Large 44px+ Icon Tiles) */}
         <div>
-          <label className="mb-1.5 block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-            What's happening?
-          </label>
-          <div className="flex flex-wrap gap-1.5">
-            {TYPES.map((t) => (
-              <button
-                key={t}
-                onClick={() => handleType(t)}
-                className={cn(
-                  "rounded-md border px-2.5 py-1.5 text-xs transition-colors",
-                  type === t
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-surface-2 text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {EMERGENCY_LABELS[t]}
-              </button>
-            ))}
+          <div className="flex items-baseline justify-between mb-2">
+            <label className="text-xs font-mono font-semibold uppercase tracking-wider text-muted-foreground">
+              1. What is the emergency?
+            </label>
+            <span className="text-xs text-muted-foreground">Select one category</span>
           </div>
-        </div>
 
-        <div>
-          <label className="mb-1.5 block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-            Severity <span className="opacity-60">· auto-suggested</span>
-          </label>
-          <div className="grid grid-cols-4 gap-1.5">
-            {PRIORITIES.map((p) => {
-              const c = priorityClasses(p);
-              const active = priority === p;
+          <div
+            role="radiogroup"
+            aria-label="Emergency category"
+            className="grid grid-cols-2 sm:grid-cols-3 gap-2.5"
+          >
+            {EMERGENCY_TILES.map((t) => {
+              const Icon = t.icon;
+              const isSelected = type === t.type;
               return (
                 <button
-                  key={p}
-                  onClick={() => setPriority(p)}
+                  key={t.type}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  onClick={() => setType(t.type)}
                   className={cn(
-                    "rounded-md border px-2 py-2 text-left transition-all",
-                    active
-                      ? `${c.border} ${c.bg}`
-                      : "border-border bg-surface-2 hover:border-border-strong",
+                    "flex flex-col items-start justify-center rounded-lg border p-3 text-left transition-colors min-h-[68px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
+                    isSelected
+                      ? "border-primary bg-primary/10 text-primary ring-1 ring-primary/40 font-semibold"
+                      : "border-border bg-surface text-foreground hover:bg-elevated hover:border-border-strong",
                   )}
                 >
-                  <div className={cn("font-mono text-xs font-bold", c.text)}>{p}</div>
-                  <div className="mt-0.5 text-[10px] text-muted-foreground">
-                    {PRIORITY_META[p].label}
+                  <div className="flex items-center gap-2">
+                    <Icon
+                      className={cn(
+                        "h-4 w-4 shrink-0",
+                        isSelected ? "text-primary" : "text-muted-foreground",
+                      )}
+                    />
+                    <span className="text-xs font-semibold leading-tight">{t.label}</span>
                   </div>
+                  <span className="mt-1 text-xs text-muted-foreground leading-tight line-clamp-1">
+                    {t.hint}
+                  </span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        <div>
-          <label className="mb-1.5 block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-            Address (where the ambulance should go)
-          </label>
-          <input
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="Street, city"
-            className="w-full rounded-md border border-border bg-surface-2 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          />
+        {/* Step 2: Location Auto-detection & Address Confirmation */}
+        <div className="space-y-2 pt-2 border-t border-border">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-mono font-semibold uppercase tracking-wider text-muted-foreground">
+              2. Emergency Location
+            </label>
+            <div className="flex items-center gap-2">
+              {gpsStatus === "acquiring" && (
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                  Acquiring GPS…
+                </span>
+              )}
+              {gpsStatus === "locked" && (
+                <span className="flex items-center gap-1.5 text-xs text-status-available font-medium">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  GPS locked (
+                  <span className="font-mono tnum">
+                    {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+                  </span>
+                  )
+                </span>
+              )}
+              {gpsStatus === "unavailable" && (
+                <span className="text-xs text-priority-p2">Manual address required</span>
+              )}
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={detectLocation}
+                className="h-7 text-xs px-2"
+              >
+                <Crosshair className="h-3 w-3 mr-1" />
+                Refresh GPS
+              </Button>
+            </div>
+          </div>
+
+          <Field
+            id="citizen-address"
+            label="Street address or landmark"
+            hint="Enter the exact building, gate, or intersection where the ambulance should arrive."
+          >
+            <Input
+              id="citizen-address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="e.g. 450 Health Ave, Building B, Gate 2"
+              className="text-sm font-medium"
+              required
+            />
+          </Field>
         </div>
 
-        <div>
-          <label className="mb-1.5 block text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-            What should responders know? (optional)
-          </label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            placeholder="Patient is conscious, chest pain started 10 minutes ago…"
-            className="w-full resize-none rounded-md border border-border bg-surface-2 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-          />
-        </div>
+        {/* Step 3: Optional Scene Notes and Phone */}
+        <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-border">
+          <Field
+            id="citizen-phone"
+            label="Callback phone number (optional)"
+            hint="For dispatchers to call if needed"
+          >
+            <Input
+              id="citizen-phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Phone number"
+              className="font-mono tnum text-xs"
+            />
+          </Field>
 
-        <div className="flex items-center gap-2 rounded-md border border-border bg-surface-2/50 px-3 py-2 text-[11px] text-muted-foreground">
-          <MapPin className="h-3.5 w-3.5" />
-          GPS locked · {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+          <Field
+            id="citizen-notes"
+            label="Scene notes (optional)"
+            hint="Floor, access code, or patient condition"
+          >
+            <Textarea
+              id="citizen-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              placeholder="e.g. 3rd floor, buzzer #402, patient is awake"
+              className="text-xs resize-none"
+            />
+          </Field>
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-col gap-3">
-        <div className={cn("rounded-lg border p-4", cls.border, cls.bg)}>
+      {/* Right Column: Estimated Response & Immediate Submit Button */}
+      <div className="flex flex-col gap-3">
+        {/* Estimated Telemetry Banner */}
+        <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
-              Estimated response
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground font-semibold">
+              Estimated Unit Response
             </span>
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
+
+          <div className="mt-3 flex items-baseline gap-2">
             {isLoadingEstimate ? (
-              <span className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="flex items-center gap-2 text-xs text-muted-foreground py-1">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                Calculating road route…
+                Calculating road telemetry…
               </span>
             ) : estimate?.isAvailable && estimate.etaMinutes != null ? (
               <>
-                <span className={cn("text-3xl font-bold tabular-nums", cls.text)}>
+                <span className="text-3xl font-bold font-mono tnum text-primary">
                   {estimate.etaMinutes}
                 </span>
-                <span className="text-xs text-muted-foreground">minutes</span>
+                <span className="text-xs text-muted-foreground font-medium">minutes</span>
               </>
             ) : estimate && !estimate.isAvailable ? (
-              <span className="text-sm font-semibold text-amber-500">No units available</span>
+              <span className="text-xs font-semibold text-priority-p2">All units responding</span>
             ) : (
-              <span className={cn("text-3xl font-bold tabular-nums", cls.text)}>—</span>
+              <span className="text-2xl font-bold font-mono tnum text-muted-foreground">—</span>
             )}
           </div>
-          <div className="mt-1 text-[11px] text-muted-foreground">
+
+          <div className="mt-2 text-xs text-muted-foreground leading-relaxed">
             {estimate?.isAvailable && estimate.distanceKm != null ? (
-              <span>Nearest unit ~{estimate.distanceKm.toFixed(1)} km away · </span>
-            ) : null}
-            Priority {priority} · SLA target under {Math.floor(PRIORITY_META[priority].slaSec / 60)}{" "}
-            min
+              <span>
+                Nearest sector unit is ~
+                <span className="font-mono tnum">{estimate.distanceKm.toFixed(1)} km</span> away.
+              </span>
+            ) : (
+              <span>
+                Units standing by. Dispatchers will allocate the closest crew immediately upon
+                request.
+              </span>
+            )}
           </div>
+
           {estimate && !estimate.isAvailable && (
-            <div className="mt-2.5 rounded-md border border-amber-500/20 bg-amber-500/10 p-2 text-[11px] text-amber-400">
-              All sector units are currently engaged on priority calls. Emergency dispatchers will
-              assign the next available unit immediately upon submission.
+            <div className="mt-3 rounded-md border border-priority-p2/20 bg-priority-p2/10 p-2.5 text-xs text-priority-p2">
+              Sector units are responding to urgent calls. Your request will enter top-priority
+              queue automatically.
             </div>
           )}
         </div>
 
-        <button
-          onClick={handleSubmit}
+        {/* Single High-Visibility Full-Width Submit Button (≥ 56px touch target) */}
+        <Button
+          type="submit"
+          variant="emergency"
+          size="xl"
           disabled={isPending}
-          className="flex items-center justify-center gap-2 rounded-md bg-p1 px-4 py-3 text-sm font-semibold text-p1-foreground shadow-glow transition-all hover:brightness-110 disabled:opacity-60"
+          className="w-full min-h-[56px] text-base font-semibold shadow-sm"
         >
-          {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-          <Send className="h-4 w-4" />
-          Request ambulance now
-        </button>
-        <p className="text-center text-[10px] text-muted-foreground">
-          By requesting, you confirm this is a real emergency. Misuse is a criminal offence.
+          {isPending ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              Dispatching ambulance…
+            </>
+          ) : (
+            <>
+              <Send className="h-5 w-5 mr-2" />
+              Request ambulance now
+            </>
+          )}
+        </Button>
+
+        {/* Reassurance helper note */}
+        <p className="text-center text-xs text-muted-foreground px-2 leading-tight">
+          Dispatchers and the nearest available ambulance crew are notified immediately.
         </p>
       </div>
-    </div>
+    </form>
   );
 }
 
@@ -503,10 +638,10 @@ function TrackPanel({
 }) {
   const { data: hospitals = [] } = useHospitals();
   const driver = incident?.driver ?? null;
+
   const hospital = useMemo(() => {
     if (!incident) return null;
     if (incident.hospitalId) return hospitals.find((h) => h.id === incident.hospitalId) ?? null;
-    // nearest with beds
     const options = hospitals.filter((h) => h.bedsAvailable > 0);
     return (
       options.sort(
@@ -518,21 +653,17 @@ function TrackPanel({
 
   if (!incident) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-surface/50 p-8 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-surface-2 text-primary">
-          <LifeBuoy className="h-6 w-6" />
-        </div>
-        <h2 className="text-base font-semibold">No active emergency</h2>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          When you request an ambulance, its live position, ETA, and status will appear here.
-        </p>
-        <button
-          onClick={onReport}
-          className="mt-2 rounded-md bg-p1 px-4 py-2 text-xs font-semibold text-p1-foreground shadow-glow hover:brightness-110"
-        >
-          Report emergency
-        </button>
-      </div>
+      <EmptyState
+        icon={<LifeBuoy className="h-5 w-5" />}
+        message="No active emergency request"
+        description="When you request an ambulance, live vehicle telemetry, ETA, and status milestones will appear here in real time."
+        action={
+          <Button variant="emergency" size="md" onClick={onReport} className="min-h-[44px]">
+            <AlertCircle className="h-4 w-4 mr-1.5" />
+            Request ambulance
+          </Button>
+        }
+      />
     );
   }
 
@@ -571,11 +702,41 @@ function TrackPanel({
         : null;
 
   const arrived = incident.status === "arrived" || (distanceKm != null && distanceKm < 0.08);
-  const cls = priorityClasses(incident.priority);
+
+  // Milestone Stepper
+  const milestones: { key: string; label: string; done: boolean; active: boolean }[] = [
+    {
+      key: "received",
+      label: "Request received",
+      done: true,
+      active: incident.status === "reported",
+    },
+    {
+      key: "assigned",
+      label: "Unit assigned",
+      done: incident.status !== "reported",
+      active: incident.status === "assigned" || incident.status === "accepted",
+    },
+    {
+      key: "en_route",
+      label: "Ambulance en route",
+      done: ["en_route", "arrived", "patient_loaded", "at_hospital", "completed"].includes(
+        incident.status,
+      ),
+      active: incident.status === "en_route",
+    },
+    {
+      key: "arrived",
+      label: "Arrived on scene",
+      done: ["arrived", "patient_loaded", "at_hospital", "completed"].includes(incident.status),
+      active: incident.status === "arrived",
+    },
+  ];
 
   return (
-    <div className="grid h-full min-h-0 gap-3 md:grid-cols-[1fr_360px]">
-      <div className="min-h-0">
+    <div className="grid h-full min-h-0 gap-4 md:grid-cols-[1fr_360px]">
+      {/* Live Map Area */}
+      <div className="min-h-[340px] md:min-h-0 flex-1">
         <CitizenMapWrapper
           incident={incident}
           driver={driver}
@@ -584,127 +745,168 @@ function TrackPanel({
         />
       </div>
 
+      {/* Side Status & Telemetry Panel */}
       <div className="flex min-h-0 flex-col gap-3 overflow-y-auto">
-        <div className="rounded-lg border border-border bg-surface panel p-4">
+        {/* Incident Summary Card */}
+        <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
           <div className="flex items-center justify-between">
-            <div className="font-mono text-xs text-muted-foreground">{incident.code}</div>
-            <span className={cn("rounded px-2 py-0.5 font-mono text-[10px] font-bold", cls.solid)}>
-              {incident.priority}
+            <span className="font-mono text-xs font-semibold text-muted-foreground tnum">
+              {incident.code}
             </span>
+            <div className="flex items-center gap-1.5">
+              <StatusBadge status={incident.status} />
+            </div>
           </div>
-          <div className="mt-1 text-sm font-semibold">{EMERGENCY_LABELS[incident.type]}</div>
-          <div className="mt-2 flex items-center gap-2 rounded-md bg-surface-2 px-3 py-2">
-            <span
-              className={cn(
-                "h-2 w-2 rounded-full",
-                isLive && "animate-pulse",
-                isCompleted ? "bg-status-available" : cls.solid,
-              )}
-            />
-            <span className="text-xs font-medium">
-              {isCompleted ? "Mission Completed" : INCIDENT_STATUS_LABELS[incident.status]}
-            </span>
+          <div className="mt-2 text-base font-semibold text-foreground">
+            {EMERGENCY_LABELS[incident.type]}
+          </div>
+          <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <MapPin className="h-3.5 w-3.5 shrink-0 text-priority-p1" />
+            <span className="truncate">{incident.address}</span>
+          </div>
+
+          {/* Reassurance copy */}
+          <div className="mt-3 rounded-md border border-border bg-surface p-2.5 text-xs text-muted-foreground leading-relaxed">
+            Stay where you are and keep your phone nearby. Responders have your location and
+            dispatchers are monitoring this call.
           </div>
         </div>
 
+        {/* Milestone Progression Stepper */}
+        <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
+          <div className="text-[11px] font-mono font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+            Response Progress
+          </div>
+          <div className="space-y-3">
+            {milestones.map((m, idx) => (
+              <div key={m.key} className="flex items-center gap-3">
+                <div
+                  className={cn(
+                    "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors",
+                    m.done
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border bg-surface text-muted-foreground",
+                  )}
+                >
+                  {m.done ? <Check className="h-3.5 w-3.5" /> : idx + 1}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div
+                    className={cn(
+                      "text-xs font-medium",
+                      m.active
+                        ? "text-primary font-semibold"
+                        : m.done
+                          ? "text-foreground"
+                          : "text-muted-foreground",
+                    )}
+                  >
+                    {m.label}
+                  </div>
+                </div>
+                {m.active && <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Driver Assigned Card */}
         {driver ? (
-          <div className="rounded-lg border border-border bg-surface panel p-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-status-enroute/20 text-status-enroute">
-                <LifeBuoy className="h-4 w-4" />
+          <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-status-enroute/15 text-status-enroute border border-status-enroute/30">
+                <LifeBuoy className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold">{driver.callSign}</div>
-                <div className="truncate text-[11px] text-muted-foreground">{driver.name}</div>
+                <div className="truncate text-sm font-semibold text-foreground font-mono">
+                  {driver.callSign}
+                </div>
+                <div className="truncate text-xs text-muted-foreground">{driver.name}</div>
               </div>
-              {isLive && (
+              {isLive && driver.phone && (
                 <a
-                  href={`tel:${(driver.phone ?? "").replace(/\D/g, "")}`}
-                  className="rounded-md border border-border bg-surface-2 p-2 hover:bg-surface-3"
-                  aria-label="Call driver"
+                  href={`tel:${driver.phone.replace(/\D/g, "")}`}
+                  className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-surface text-foreground transition-colors hover:bg-elevated hover:text-primary min-h-[44px] min-w-[44px]"
+                  aria-label="Call emergency driver"
                 >
-                  <Phone className="h-3.5 w-3.5" />
+                  <Phone className="h-4 w-4" />
                 </a>
               )}
             </div>
+
             {isLive ? (
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <Stat
-                  label="ETA"
-                  value={arrived ? "Arriving" : eta != null ? `${eta} min` : "—"}
-                  accent
-                />
-                <Stat
-                  label="Distance"
-                  value={distanceKm != null ? `${distanceKm.toFixed(1)} km` : "—"}
-                />
-                <Stat label="Rating" value={Number(driver.rating ?? 0).toFixed(1)} />
-                <Stat label="Missions" value={driver.missionsCompleted} />
+                <div className="rounded-md border border-border bg-surface p-2.5">
+                  <div className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+                    Estimated Arrival
+                  </div>
+                  <div className="mt-0.5 text-xl font-bold font-mono tnum text-primary">
+                    {arrived ? "Arriving" : eta != null ? `${eta} min` : "—"}
+                  </div>
+                </div>
+                <div className="rounded-md border border-border bg-surface p-2.5">
+                  <div className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+                    Distance
+                  </div>
+                  <div className="mt-0.5 text-xl font-bold font-mono tnum text-foreground">
+                    {distanceKm != null ? `${distanceKm.toFixed(1)} km` : "—"}
+                  </div>
+                </div>
               </div>
             ) : isCompleted ? (
               <div className="mt-3 rounded-md border border-status-available/30 bg-status-available/10 p-2.5 text-center text-xs font-semibold text-status-available">
-                ✓ Handover Complete · Patient Transferred
+                Mission Completed · Patient Handover Complete
               </div>
             ) : null}
           </div>
         ) : (
-          <div className="rounded-lg border border-border bg-surface panel p-4 text-center text-xs text-muted-foreground">
-            Waiting for the closest available unit…
+          <div className="rounded-lg border border-border bg-card p-4 text-center text-xs text-muted-foreground shadow-xs">
+            <Loader2 className="h-4 w-4 animate-spin text-primary mx-auto mb-2" />
+            Allocating nearest sector ambulance crew…
           </div>
         )}
 
+        {/* Destination Hospital */}
         {hospital && (
-          <div className="rounded-lg border border-border bg-surface panel p-4">
-            <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-              Destination hospital
+          <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
+            <div className="text-[11px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">
+              Destination Hospital
             </div>
-            <div className="mt-1 text-sm font-semibold">{hospital.name}</div>
-            <div className="text-[11px] text-muted-foreground">
-              {hospital.bedsAvailable} of {hospital.beds} beds available
+            <div className="mt-1 text-sm font-semibold text-foreground">{hospital.name}</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              <span className="font-mono tnum">{hospital.bedsAvailable}</span> of{" "}
+              <span className="font-mono tnum">{hospital.beds}</span> emergency beds available
             </div>
           </div>
         )}
 
-        <div className="rounded-lg border border-border bg-surface panel p-4">
-          <div className="mb-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-            Timeline
-          </div>
-          <ol className="space-y-2">
-            {(incident.timeline ?? []).map((ev) => (
-              <li key={ev.id} className="flex gap-2.5">
-                <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-medium">{INCIDENT_STATUS_LABELS[ev.status]}</div>
-                  <div className="text-[10px] text-muted-foreground" suppressHydrationWarning>
-                    {now ? formatRelative(ev.timestamp, now) : "…"}
-                    {ev.note ? ` · ${ev.note}` : ""}
+        {/* Timeline Events */}
+        {incident.timeline && incident.timeline.length > 0 && (
+          <div className="rounded-lg border border-border bg-card p-4 shadow-xs">
+            <div className="text-[11px] font-mono font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+              Activity Log
+            </div>
+            <ol className="space-y-2">
+              {incident.timeline.map((ev) => (
+                <li key={ev.id} className="flex gap-2.5 text-xs">
+                  <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium text-foreground">
+                      {INCIDENT_STATUS_LABELS[ev.status]}
+                    </span>
+                    <span
+                      className="ml-1.5 text-muted-foreground font-mono tnum"
+                      suppressHydrationWarning
+                    >
+                      {now ? formatRelative(ev.timestamp, now) : "…"}
+                    </span>
+                    {ev.note && <p className="text-xs text-muted-foreground mt-0.5">{ev.note}</p>}
                   </div>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string | number;
-  accent?: boolean;
-}) {
-  return (
-    <div className="rounded-md border border-border bg-surface-2 p-2">
-      <div className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div className={cn("mt-0.5 text-sm font-semibold tabular-nums", accent && "text-primary")}>
-        {value}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -719,41 +921,42 @@ function HistoryList({
 }) {
   if (incidents.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-surface/50 p-8 text-center">
-        <History className="h-8 w-8 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">No previous incidents yet.</p>
-      </div>
+      <EmptyState
+        icon={<History className="h-5 w-5" />}
+        message="No previous incident records"
+        description="Your past emergency requests and call records will be documented here."
+      />
     );
   }
+
   return (
-    <div className="grid gap-2 overflow-y-auto rounded-lg border border-border bg-surface panel p-3">
-      {incidents.map((i) => {
-        const cls = priorityClasses(i.priority);
-        return (
-          <button
-            key={i.id}
-            onClick={() => onSelect(i.id)}
-            className="grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-md border border-border bg-surface-2 p-3 text-left transition-colors hover:border-border-strong"
-          >
-            <span className={cn("rounded px-2 py-0.5 font-mono text-[10px] font-bold", cls.solid)}>
-              {i.priority}
-            </span>
+    <div className="grid gap-2.5 overflow-y-auto rounded-lg border border-border bg-card p-3 shadow-xs">
+      {incidents.map((i) => (
+        <button
+          key={i.id}
+          type="button"
+          onClick={() => onSelect(i.id)}
+          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface p-3.5 text-left transition-colors hover:border-border-strong hover:bg-elevated min-h-[44px]"
+        >
+          <div className="flex items-center gap-3 min-w-0">
             <div className="min-w-0">
-              <div className="truncate text-sm font-medium">
-                {EMERGENCY_LABELS[i.type]} · {i.code}
+              <div className="truncate text-sm font-semibold text-foreground">
+                {EMERGENCY_LABELS[i.type]} ·{" "}
+                <span className="font-mono tnum text-muted-foreground">{i.code}</span>
               </div>
-              <div className="truncate text-[11px] text-muted-foreground">{i.address}</div>
+              <div className="truncate text-xs text-muted-foreground mt-0.5">{i.address}</div>
             </div>
-            <div className="text-right">
-              <div className="text-[11px] font-medium">{INCIDENT_STATUS_LABELS[i.status]}</div>
-              <div className="flex items-center justify-end gap-1 text-[10px] text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span suppressHydrationWarning>{formatRelative(i.reportedAt)}</span>
-              </div>
+          </div>
+
+          <div className="flex items-center gap-3 ml-auto text-right">
+            <StatusBadge status={i.status} />
+            <div className="flex items-center gap-1 text-xs text-muted-foreground font-mono tnum">
+              <Clock className="h-3.5 w-3.5" />
+              <span suppressHydrationWarning>{formatRelative(i.reportedAt)}</span>
             </div>
-          </button>
-        );
-      })}
+          </div>
+        </button>
+      ))}
     </div>
   );
 }

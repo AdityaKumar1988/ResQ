@@ -114,7 +114,7 @@ export const INCIDENT_STATUS_LABELS: Record<IncidentStatus, string> = {
 // ── API payloads ─────────────────────────────────────────────────────────────
 
 export interface CreateIncidentInput {
-  priority: Priority;
+  priority?: Priority;
   type: EmergencyType;
   lat: number;
   lng: number;

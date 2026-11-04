@@ -10,6 +10,7 @@ export interface UserInfo {
   email: string;
   name: string;
   role: UserRole;
+  status: "invited" | "active" | "suspended";
   phone?: string;
   created_at: string;
 }
@@ -65,6 +66,31 @@ export function useUpdateUserRole() {
     },
     onError: (err) => {
       const msg = err instanceof ApiError ? err.message : "Failed to update role";
+      toast.error(msg);
+    },
+  });
+}
+
+export function useUpdateUserStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: "active" | "invited" | "suspended";
+    }) => {
+      const res = await client.patch<{ user: UserInfo }>(`/admin/users/${id}/status`, { status });
+      return res.user;
+    },
+    onSuccess: (user) => {
+      toast.success(`Status updated for ${user.name}`);
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.all() });
+    },
+    onError: (err) => {
+      const msg = err instanceof ApiError ? err.message : "Failed to update staff status";
       toast.error(msg);
     },
   });

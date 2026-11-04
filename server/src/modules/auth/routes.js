@@ -138,6 +138,9 @@ router.post(
     if (!user) throw new HttpError(401, "Invalid credentials");
     if (!(await verifyPassword(password, user.password_hash)))
       throw new HttpError(401, "Invalid credentials");
+    if (user.status === "suspended") {
+      throw new HttpError(403, "Account is suspended");
+    }
     const { password_hash, ...safe } = user;
     res.json({ user: safe, ...tokensFor(user) });
   }),
@@ -156,6 +159,9 @@ router.post(
     }
     const user = await db("users").where({ id: decoded.sub }).first();
     if (!user) throw new HttpError(401, "User not found");
+    if (user.status === "suspended") {
+      throw new HttpError(403, "Account is suspended");
+    }
     res.json(tokensFor(user));
   }),
 );
@@ -166,7 +172,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const user = await db("users")
       .where({ id: req.user.sub })
-      .select("id", "email", "name", "role", "phone", "created_at")
+      .select("id", "email", "name", "role", "phone", "status", "created_at")
       .first();
     res.json({ user });
   }),

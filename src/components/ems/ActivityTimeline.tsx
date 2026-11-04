@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, Info, Siren } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, Radio, Siren, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatRelative } from "@/lib/ems/geo";
 import { useNotifications } from "@/hooks/notifications/use-notifications";
@@ -8,13 +8,14 @@ import { useIncidents } from "@/hooks/dispatch/use-incidents";
 interface ActivityEvent {
   id: string;
   kind: "critical" | "warn" | "success" | "info";
+  actor: "DISPATCH" | "SYSTEM" | "FIELD" | "INTAKE";
   message: string;
   timestamp: string;
 }
 
 /**
- * Activity Timeline — shows real notifications + recent incident events.
- * Supports compact horizontal strip or expanded grid/list based on user drag resize.
+ * Activity Timeline — Standardized event stream with icon, time (tnum), and actor.
+ * Fully responsive to vertical resizing from react-resizable-panels.
  */
 export function ActivityTimeline({ isExpanded = false }: { isExpanded?: boolean }) {
   const { data: notifData } = useNotifications();
@@ -27,28 +28,41 @@ export function ActivityTimeline({ isExpanded = false }: { isExpanded?: boolean 
     return () => clearInterval(t);
   }, []);
 
-  // Build activity events from real notifications + recent incident status changes
+  // Standardize activity events from notifications and incidents
   const activity: ActivityEvent[] = [
-    ...(notifData?.all ?? []).slice(0, 20).map((n) => ({
-      id: n.id,
-      kind:
-        n.kind === "incident_created"
-          ? "critical"
-          : n.kind === "incident_assigned"
-            ? "info"
-            : n.kind === "incident_completed"
-              ? "success"
-              : ("info" as ActivityEvent["kind"]),
-      message: n.title + (n.body ? ` — ${n.body}` : ""),
-      timestamp: n.createdAt,
-    })),
+    ...(notifData?.all ?? []).slice(0, 25).map((n) => {
+      const isCritical = n.kind === "incident_created";
+      const isCompleted = n.kind === "incident_completed";
+      const isAssigned = n.kind === "incident_assigned";
+
+      return {
+        id: n.id,
+        kind: isCritical
+          ? ("critical" as const)
+          : isCompleted
+            ? ("success" as const)
+            : isAssigned
+              ? ("info" as const)
+              : ("info" as const),
+        actor: isCritical
+          ? ("INTAKE" as const)
+          : isAssigned
+            ? ("DISPATCH" as const)
+            : isCompleted
+              ? ("FIELD" as const)
+              : ("SYSTEM" as const),
+        message: n.title + (n.body ? ` — ${n.body}` : ""),
+        timestamp: n.createdAt,
+      };
+    }),
     ...incidents
       .filter((i) => i.priority === "P1" && i.status !== "completed" && i.status !== "cancelled")
       .slice(0, 5)
       .map((i) => ({
         id: `inc-${i.id}`,
         kind: "critical" as const,
-        message: `${i.code} · P1 ${i.type} @ ${i.address}`,
+        actor: "DISPATCH" as const,
+        message: `${i.code} · P1 priority emergency intake at ${i.address}`,
         timestamp: i.reportedAt,
       })),
   ]
@@ -56,43 +70,36 @@ export function ActivityTimeline({ isExpanded = false }: { isExpanded?: boolean 
     .slice(0, 30);
 
   return (
-    <div className="flex h-full min-h-0 flex-col panel rounded-lg border border-border bg-surface shadow-sm overflow-hidden">
-      {/* Header bar */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-2 bg-surface-2/60">
+    <div className="flex h-full min-h-0 flex-col rounded-lg border border-border bg-card overflow-hidden">
+      {/* Header Bar */}
+      <div className="flex shrink-0 items-center justify-between border-b border-border px-3.5 py-1.5 bg-surface-2/60 select-none">
         <div className="flex items-center gap-2">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-          </span>
+          <div className="flex h-2 w-2 rounded-full bg-primary shrink-0" />
           <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-            Activity stream
+            Activity Stream
           </h3>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="rounded bg-surface-3 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-            {activity.length} events
-          </span>
-        </div>
+        <span className="rounded bg-surface-3 px-1.5 py-0.5 font-mono text-xs font-semibold tnum text-muted-foreground">
+          {activity.length} events
+        </span>
       </div>
 
       {/* Content Stream */}
-      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-auto p-2.5">
-        {activity.length === 0 && (
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-auto p-2">
+        {activity.length === 0 ? (
           <div className="flex h-full min-h-[50px] items-center justify-center text-xs text-muted-foreground">
             No recent activity recorded.
           </div>
-        )}
-
-        {isExpanded ? (
+        ) : isExpanded ? (
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {activity.map((e) => (
-              <ActivityCard key={e.id} event={e} now={now} />
+              <StandardizedEventRow key={e.id} event={e} now={now} />
             ))}
           </div>
         ) : (
           <div className="flex min-w-max gap-2">
             {activity.map((e) => (
-              <ActivityCard key={e.id} event={e} now={now} />
+              <StandardizedEventRow key={e.id} event={e} now={now} />
             ))}
           </div>
         )}
@@ -101,49 +108,60 @@ export function ActivityTimeline({ isExpanded = false }: { isExpanded?: boolean 
   );
 }
 
-function ActivityCard({ event: e, now }: { event: ActivityEvent; now: number }) {
+function StandardizedEventRow({ event, now }: { event: ActivityEvent; now: number }) {
+  const Icon =
+    event.kind === "critical"
+      ? Siren
+      : event.kind === "success"
+        ? CheckCircle2
+        : event.kind === "warn"
+          ? AlertTriangle
+          : event.actor === "FIELD"
+            ? Truck
+            : event.actor === "DISPATCH"
+              ? Radio
+              : Info;
+
+  const iconColor =
+    event.kind === "critical"
+      ? "text-[var(--color-p1)]"
+      : event.kind === "success"
+        ? "text-status-available"
+        : event.kind === "warn"
+          ? "text-[var(--color-p2)]"
+          : "text-primary";
+
+  const actorBadgeColor =
+    event.actor === "DISPATCH"
+      ? "bg-primary/10 text-primary border-primary/30"
+      : event.actor === "INTAKE"
+        ? "bg-[var(--color-p1)]/10 text-[var(--color-p1)] border-[var(--color-p1)]/30"
+        : event.actor === "FIELD"
+          ? "bg-status-available/10 text-status-available border-status-available/30"
+          : "bg-surface-3 text-muted-foreground border-border";
+
   return (
-    <div
-      className={cn(
-        "flex min-w-[230px] max-w-[300px] items-start gap-2.5 rounded-md border p-2 text-left transition-colors",
-        e.kind === "critical"
-          ? "border-p1/35 bg-p1/[0.04]"
-          : e.kind === "warn"
-            ? "border-p2/35 bg-p2/[0.04]"
-            : e.kind === "success"
-              ? "border-status-available/35 bg-status-available/[0.04]"
-              : "border-border bg-surface-2/80",
-      )}
-    >
-      <div
-        className={cn(
-          "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded",
-          e.kind === "critical"
-            ? "bg-p1/20 text-p1"
-            : e.kind === "warn"
-              ? "bg-p2/20 text-p2"
-              : e.kind === "success"
-                ? "bg-status-available/20 text-status-available"
-                : "bg-surface-3 text-muted-foreground",
-        )}
-      >
-        {e.kind === "critical" ? (
-          <Siren className="h-3.5 w-3.5" />
-        ) : e.kind === "warn" ? (
-          <AlertTriangle className="h-3.5 w-3.5" />
-        ) : e.kind === "success" ? (
-          <CheckCircle2 className="h-3.5 w-3.5" />
-        ) : (
-          <Info className="h-3.5 w-3.5" />
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-xs font-medium leading-snug text-foreground/90">
-          {e.message}
+    <div className="flex items-center gap-2.5 rounded-md border border-border bg-surface-2/60 px-3 py-1.5 text-xs transition-colors hover:border-border-strong hover:bg-surface-2 max-w-sm shrink-0">
+      <Icon className={cn("h-4 w-4 shrink-0", iconColor)} />
+
+      <div className="min-w-0 flex-1 leading-snug">
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <span
+            className={cn(
+              "rounded px-1.5 py-0.2 font-mono text-[11px] font-bold uppercase tracking-wider border",
+              actorBadgeColor,
+            )}
+          >
+            {event.actor}
+          </span>
+          <span
+            className="font-mono text-xs tnum text-muted-foreground shrink-0"
+            suppressHydrationWarning
+          >
+            {formatRelative(event.timestamp, now)}
+          </span>
         </div>
-        <div className="mt-0.5 text-[10px] font-mono text-muted-foreground">
-          {formatRelative(e.timestamp, now)}
-        </div>
+        <p className="truncate text-foreground font-medium">{event.message}</p>
       </div>
     </div>
   );

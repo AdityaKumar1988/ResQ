@@ -8,14 +8,14 @@ import { HttpError } from "../../utils/httpError.js";
 import { emit } from "../../socket.js";
 import { createAndEmitNotification, notifyRole } from "../notifications/service.js";
 import { calculateRouteEta, isValidCoordinate } from "../../utils/routing.js";
+import { logAudit } from "../../middleware/audit.js";
+import { triageEmergency, SLA } from "./triage.js";
 
 const router = Router();
 router.use(authenticate);
 
-const SLA = { P1: 480, P2: 900, P3: 1800, P4: 3600 };
-
 const createSchema = z.object({
-  priority: z.enum(["P1", "P2", "P3", "P4"]),
+  priority: z.enum(["P1", "P2", "P3", "P4"]).optional(),
   type: z.enum([
     "cardiac",
     "trauma",
@@ -213,12 +213,32 @@ router.post(
   validate(createSchema),
   asyncHandler(async (req, res) => {
     const body = req.body;
+    let priority;
+    let sla_seconds;
+
+    if (req.user.role === "citizen") {
+      // Citizen emergency: compute priority and SLA server-side (ignore client priority)
+      const triage = triageEmergency(body.type);
+      priority = triage.priority;
+      sla_seconds = triage.slaSeconds;
+    } else {
+      // Dispatchers / admins may set priority; if omitted, compute default via triage
+      if (body.priority) {
+        priority = body.priority;
+        sla_seconds = SLA[priority];
+      } else {
+        const triage = triageEmergency(body.type);
+        priority = triage.priority;
+        sla_seconds = triage.slaSeconds;
+      }
+    }
+
     const incident = await db.transaction(async (trx) => {
       const code = await nextIncidentCode(trx);
       const [row] = await trx("incidents")
         .insert({
           code,
-          priority: body.priority,
+          priority,
           type: body.type,
           status: "reported",
           lat: body.lat,
@@ -228,7 +248,7 @@ router.post(
           citizen_name: body.citizenName,
           citizen_phone: body.citizenPhone,
           citizen_user_id: req.user.sub,
-          sla_seconds: SLA[body.priority],
+          sla_seconds,
           reported_at: trx.fn.now(),
         })
         .returning("*");
@@ -239,6 +259,10 @@ router.post(
       });
       return row;
     });
+
+    if (req.user.role === "admin" || req.user.role === "dispatcher") {
+      await logAudit(req, "set_incident_priority", incident.id);
+    }
 
     emit.incidentCreated(incident);
 
@@ -462,6 +486,48 @@ router.post(
     });
 
     res.json({ incident: enrichedIncident });
+  }),
+);
+
+const prioritySchema = z.object({
+  priority: z.enum(["P1", "P2", "P3", "P4"]),
+});
+
+router.patch(
+  "/:id/priority",
+  requireRole("admin", "dispatcher"),
+  validate(prioritySchema),
+  asyncHandler(async (req, res) => {
+    const { priority } = req.body;
+    const sla_seconds = SLA[priority];
+
+    const incident = await db.transaction(async (trx) => {
+      const existing = await trx("incidents").where({ id: req.params.id }).first();
+      if (!existing) throw new HttpError(404, "Incident not found");
+
+      const [updated] = await trx("incidents")
+        .where({ id: req.params.id })
+        .update({
+          priority,
+          sla_seconds,
+          updated_at: trx.fn.now(),
+        })
+        .returning("*");
+
+      await trx("incident_events").insert({
+        incident_id: updated.id,
+        status: updated.status,
+        actor_name: req.user.role === "admin" ? "Admin" : "Dispatcher",
+        note: `Priority changed to ${priority} (SLA ${sla_seconds}s)`,
+      });
+
+      return updated;
+    });
+
+    await logAudit(req, "change_incident_priority", incident.id);
+
+    emit.incidentUpdated(incident, incident.driver_id);
+    res.json({ incident });
   }),
 );
 

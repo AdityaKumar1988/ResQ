@@ -4,6 +4,13 @@ import L from "leaflet";
 import { Crosshair, Focus, Navigation, AlertTriangle } from "lucide-react";
 import type { Driver, Hospital, Incident } from "@/lib/ems/types";
 import { dispatchApi } from "@/lib/api/dispatch";
+import {
+  createCitizenMarker,
+  createAmbulanceMarker,
+  createHospitalMarker,
+  syncMapTileLayer,
+} from "@/lib/ems/map-base";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 interface Props {
   incident: Incident | null;
@@ -12,43 +19,11 @@ interface Props {
   citizenLocation: { lat: number; lng: number };
 }
 
-function citizenIcon() {
-  return L.divIcon({
-    className: "",
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    html: `<div style="position:relative;width:30px;height:30px;">
-      <div style="position:absolute;inset:0;border-radius:9999px;background:oklch(0.62 0.24 25);opacity:.25;animation:pulse-ring 1.8s ease-out infinite;"></div>
-      <div style="position:absolute;inset:6px;border-radius:9999px;background:oklch(0.62 0.24 25);box-shadow:0 0 12px oklch(0.62 0.24 25);border:2px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font:700 10px 'Inter';">You</div>
-    </div>`,
-  });
-}
-
-function ambulanceIcon(heading: number) {
-  return L.divIcon({
-    className: "ambulance-marker-smooth",
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    html: `<div style="width:32px;height:32px;transform:rotate(${heading}deg);display:flex;align-items:center;justify-content:center;transition:transform 0.4s ease-out;">
-      <div style="width:26px;height:26px;border-radius:8px;background:#06b6d4;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(6,182,212,0.8);border:2px solid #ffffff;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#041f26" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
-      </div>
-    </div>`,
-  });
-}
-
-function hospitalIcon() {
-  return L.divIcon({
-    className: "",
-    iconSize: [26, 26],
-    iconAnchor: [13, 13],
-    html: `<div style="width:26px;height:26px;border-radius:6px;background:oklch(0.28 0.03 250);border:1.5px solid oklch(0.76 0.15 290);display:flex;align-items:center;justify-content:center;color:oklch(0.76 0.15 290);font:800 12px 'Inter';">H</div>`,
-  });
-}
-
 export default function CitizenMap({ incident, driver, hospital, citizenLocation }: Props) {
+  const { resolvedTheme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LType.Map | null>(null);
+  const tileLayerRef = useRef<LType.TileLayer | null>(null);
   const layerRef = useRef<LType.LayerGroup | null>(null);
   const lastValidPolylineRef = useRef<[number, number][] | null>(null);
   const [activePolyline, setActivePolyline] = useState<[number, number][] | null>(null);
@@ -63,17 +38,31 @@ export default function CitizenMap({ incident, driver, hospital, citizenLocation
       zoom: 14,
       zoomControl: true,
     });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "© OpenStreetMap · ResQ Navigation",
-    }).addTo(map);
+    syncMapTileLayer(map, resolvedTheme === "dark", tileLayerRef);
     layerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
     return () => {
       map.remove();
       mapRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [citizenLocation.lat, citizenLocation.lng]);
+
+  // Handle container resize
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver(() => {
+      mapRef.current?.invalidateSize();
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Sync theme-based tile layer
+  useEffect(() => {
+    if (!mapRef.current) return;
+    syncMapTileLayer(mapRef.current, resolvedTheme === "dark", tileLayerRef);
+  }, [resolvedTheme]);
 
   const hasValidDriverLoc =
     driver?.location &&
@@ -132,7 +121,6 @@ export default function CitizenMap({ incident, driver, hospital, citizenLocation
           setActivePolyline(res.polyline);
           setRoutingStatus("road");
         } else if (res?.provider === "haversine_fallback") {
-          // If fallback provider, preserve last valid route if available, otherwise notify
           if (!lastValidPolylineRef.current) {
             setActivePolyline(null);
           }
@@ -165,14 +153,14 @@ export default function CitizenMap({ incident, driver, hospital, citizenLocation
     layer.clearLayers();
 
     // Citizen Emergency Location Marker
-    L.marker([citizenLocation.lat, citizenLocation.lng], { icon: citizenIcon() })
+    L.marker([citizenLocation.lat, citizenLocation.lng], { icon: createCitizenMarker("You") })
       .bindTooltip("Emergency Location", { direction: "top", offset: [0, -12] })
       .addTo(layer);
 
     // Live Ambulance Marker
     if (driver && hasValidDriverLoc && isLiveMission) {
       L.marker([driver.location.lat, driver.location.lng], {
-        icon: ambulanceIcon(driver.heading),
+        icon: createAmbulanceMarker(driver.status, driver.heading, { isSelf: true }),
       })
         .bindTooltip(`<b>${driver.callSign}</b><br/>${driver.name}`, {
           direction: "top",
@@ -180,33 +168,32 @@ export default function CitizenMap({ incident, driver, hospital, citizenLocation
         })
         .addTo(layer);
 
-      // Render Genuine Road Polyline (Dual-layered Cyan Casing + Core Line)
+      // Render Genuine Road Polyline (Dual-layered Contrast Base + Cyan Core)
       const roadLine = activePolyline || lastValidPolylineRef.current;
       if (roadLine && roadLine.length >= 2) {
-        // Outer glowing casing
+        // High-contrast dark casing
         L.polyline(roadLine, {
-          color: "#0891b2",
-          weight: 8,
-          opacity: 0.35,
+          color: "#0F172A",
+          weight: 6,
+          opacity: 0.8,
           lineCap: "round",
           lineJoin: "round",
         }).addTo(layer);
 
         // Vibrant cyan core road polyline
         L.polyline(roadLine, {
-          color: "#06b6d4",
-          weight: 5,
+          color: "#38BDF8",
+          weight: 4,
           opacity: 0.95,
           lineCap: "round",
           lineJoin: "round",
         }).addTo(layer);
       }
-      // Note: If no road line is available, NO straight fake line is drawn per specification!
     }
 
     // Destination Hospital Marker (if applicable)
     if (hospital) {
-      L.marker([hospital.location.lat, hospital.location.lng], { icon: hospitalIcon() })
+      L.marker([hospital.location.lat, hospital.location.lng], { icon: createHospitalMarker("H") })
         .bindTooltip(`${hospital.name} · ${hospital.bedsAvailable} beds`, {
           direction: "top",
           offset: [0, -10],
@@ -264,52 +251,56 @@ export default function CitizenMap({ incident, driver, hospital, citizenLocation
   }, [driver, citizenLocation, activePolyline, hasValidDriverLoc]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-lg border border-border bg-surface panel">
+    <div className="relative isolate z-0 h-full w-full overflow-hidden rounded-lg border border-border bg-card">
       <div ref={containerRef} className="h-full w-full" />
 
       {/* Navigation Telemetry & Routing Status Banner */}
       {isLiveMission && driver && (
         <div className="absolute top-3 left-3 z-[400] flex flex-col gap-1.5 pointer-events-none">
-          <div className="flex items-center gap-2 rounded-md border border-border-strong bg-surface/90 px-3 py-1.5 shadow-md backdrop-blur text-xs">
+          <div className="flex items-center gap-2 rounded-md border border-border bg-card/95 px-3 py-1.5 shadow-sm backdrop-blur text-xs">
             {routingStatus === "road" ? (
               <>
-                <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
-                <span className="font-semibold text-cyan-400 font-mono text-[11px] uppercase tracking-wider">
+                <span className="h-2 w-2 rounded-full bg-primary" />
+                <span className="font-semibold text-primary font-mono text-[11px] uppercase tracking-wider">
                   Live Road Navigation
                 </span>
               </>
             ) : routingStatus === "fallback" ? (
               <>
-                <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
-                <span className="text-amber-400 font-medium text-[11px]">
-                  Road Route Unavailable · Direct Telemetry Active
+                <AlertTriangle className="h-3.5 w-3.5 text-priority-p2" />
+                <span className="text-priority-p2 font-medium text-xs">
+                  Direct Telemetry Active
                 </span>
               </>
             ) : (
               <>
                 <Navigation className="h-3.5 w-3.5 text-primary animate-spin" />
-                <span className="text-muted-foreground text-[11px]">Calculating road route…</span>
+                <span className="text-muted-foreground text-xs">Calculating road route…</span>
               </>
             )}
           </div>
         </div>
       )}
 
-      {/* Map Action Floating Controls */}
-      <div className="absolute top-3 right-3 z-[400] flex flex-col gap-1.5">
+      {/* Map Action Floating Controls (>= 44px touch targets) */}
+      <div className="absolute top-3 right-3 z-[400] flex flex-col gap-2">
         {driver && hasValidDriverLoc && (
           <button
+            type="button"
             onClick={handleRecenterAmbulance}
-            className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-surface/90 text-foreground shadow-md backdrop-blur transition-all hover:bg-surface hover:text-cyan-400 active:scale-95"
+            className="flex h-11 w-11 items-center justify-center rounded-md border border-border bg-card/95 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-elevated hover:text-primary active:scale-95"
             title="Recenter on Ambulance"
+            aria-label="Recenter on Ambulance"
           >
             <Crosshair className="h-4 w-4" />
           </button>
         )}
         <button
+          type="button"
           onClick={handleFitRoute}
-          className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-surface/90 text-foreground shadow-md backdrop-blur transition-all hover:bg-surface hover:text-primary active:scale-95"
+          className="flex h-11 w-11 items-center justify-center rounded-md border border-border bg-card/95 text-foreground shadow-sm backdrop-blur transition-colors hover:bg-elevated hover:text-primary active:scale-95"
           title="Fit Entire Route"
+          aria-label="Fit Entire Route"
         >
           <Focus className="h-4 w-4" />
         </button>

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { vehiclesApi, type CreateVehicleInput } from "@/lib/api/vehicles";
+import { vehiclesApi, type CreateVehicleInput, type UpdateVehicleInput } from "@/lib/api/vehicles";
 import { queryKeys } from "@/lib/queryKeys";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
@@ -26,6 +26,22 @@ export function useCreateVehicle() {
     },
     onError: (err: unknown) => {
       const msg = err instanceof Error ? err.message : "Failed to add vehicle.";
+      toast.error(msg);
+    },
+  });
+}
+
+export function useUpdateVehicle() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateVehicleInput }) =>
+      vehiclesApi.update(id, data),
+    onSuccess: (res) => {
+      toast.success(`Vehicle ${res.vehicle.plate} updated.`);
+      queryClient.invalidateQueries({ queryKey: queryKeys.vehicles.all() });
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof Error ? err.message : "Failed to update vehicle.";
       toast.error(msg);
     },
   });

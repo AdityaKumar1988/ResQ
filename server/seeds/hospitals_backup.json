@@ -1,0 +1,42 @@
+[
+  {
+    "id": "3266d5d8-606e-4ec9-8d56-216f14ca279f",
+    "name": "Christian Medical College (CMC)",
+    "lat": "12.924900",
+    "lng": "79.135000",
+    "beds": 300,
+    "beds_available": 180,
+    "created_at": "2026-07-31T21:03:56.487Z",
+    "updated_at": "2026-07-31T21:03:56.487Z"
+  },
+  {
+    "id": "059316ff-c9fc-4171-b55c-4f17dcb2c5e1",
+    "name": "Apollo KH Hospital",
+    "lat": "12.916800",
+    "lng": "79.132200",
+    "beds": 220,
+    "beds_available": 95,
+    "created_at": "2026-07-31T21:03:56.487Z",
+    "updated_at": "2026-07-31T21:03:56.487Z"
+  },
+  {
+    "id": "9c45ce83-deb8-405e-89f2-17f25d2ab311",
+    "name": "Naruvi Hospital",
+    "lat": "12.978800",
+    "lng": "79.167300",
+    "beds": 250,
+    "beds_available": 140,
+    "created_at": "2026-07-31T21:03:56.487Z",
+    "updated_at": "2026-07-31T21:03:56.487Z"
+  },
+  {
+    "id": "6cbd7822-777f-4456-991d-51f19a32e0a1",
+    "name": "Government Vellore Medical College Hospital",
+    "lat": "12.930600",
+    "lng": "79.132600",
+    "beds": 350,
+    "beds_available": 210,
+    "created_at": "2026-07-31T21:03:56.487Z",
+    "updated_at": "2026-07-31T21:03:56.487Z"
+  }
+]
